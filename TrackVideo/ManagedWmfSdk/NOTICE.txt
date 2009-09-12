@@ -1,0 +1,5 @@
+Package: C# Windows Media Format SDK Translation
+Author:  Idael Cardoso
+Source:  http://www.codeproject.com/KB/audio-video/ManWMF.aspx
+License: BSD-Like ("as-is")
+Date:    2009-09-11

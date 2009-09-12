@@ -1,0 +1,5 @@
+Package: DotNetZip
+Author:  Dino Chiesa and Microsoft Corporation
+Source:  http://www.codeplex.com/DotNetZip or http://dotnetzip.codeplex.com
+License: Ms-PL (Microsoft Public License)
+Date:    2009-09-11
