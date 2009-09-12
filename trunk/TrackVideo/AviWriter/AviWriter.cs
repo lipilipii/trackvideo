@@ -133,6 +133,8 @@ namespace ReneNyffenegger {
 
             AVIFileRelease(pfile_);
             AVIFileExit();
+
+            bmp_.Dispose();  // RM 20090912
         }
 
         private void CreateStream() {

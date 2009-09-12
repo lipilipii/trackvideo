@@ -29,6 +29,7 @@
 
 using System;
 using System.IO;
+using System.Xml;
 using System.Data;
 using System.Text;
 using System.Drawing;
@@ -40,7 +41,6 @@ using System.Collections.ObjectModel;
 using Alfray.LibUtils2.Misc;
 
 using Ionic.Zip;
-using System.Xml;
 using ReneNyffenegger;
 
 namespace Alfray.TrackVideo.TrackVideoApp {
@@ -49,6 +49,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private DebugForm mDebugForm;
         private PrefForm mPrefForm;
         private bool mIsFirstFormActivated = true;
+        private Generator mGenerator;
 
         private class ListBoxDoubleBuffer : ListBox {
             public ListBoxDoubleBuffer() : base() {
@@ -73,6 +74,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         /// Clean up any resources being used.
         /// </summary>
         protected override void Dispose(bool disposing) {
+
+            stopGenerator();
+
             if (disposing) {
                 if (components != null) {
                     components.Dispose();
@@ -108,12 +112,17 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             // load all settings
             loadSettings();
 
-            // apply defaults
+            // apply defaults, update UI
             reloadPrefs();
         }
 
-
+        /// <summary>
+        /// Invoked when the window is closed by the user
+        /// </summary>
         private void terminate() {
+
+            stopGenerator();
+
             // close windows
             closePrefWindow();
             closeDebugWindow();
@@ -148,8 +157,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             mEditTrackFilename.Text = p[PrefConstants.kLastKmxPath ];
             mEditDestFilename.Text  = p[PrefConstants.kLastDestPath];
 
+            // restore generate options with default values
+            mEditFps.Text = p.getString(PrefConstants.kLastFps,  "30");
+            mEditSx.Text  = p.getString(PrefConstants.kLastSx,  "640");
+            mEditSy.Text  = p.getString(PrefConstants.kLastSy,  "480");
+
             // <insert other setting stuff here>
-            updateButtons();
         }
 
         private void saveSettings() {
@@ -223,7 +236,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         private void updateButtons() {
-            mButtonGenerate.Enabled = File.Exists(mEditTrackFilename.Text) &&
+            mButtonGenerate.Enabled = mGenerator == null &&
+                                      File.Exists(mEditTrackFilename.Text) &&
                                       mEditDestFilename.Text != "";
         }
 
@@ -263,10 +277,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         private void onGenerate() {
+            if (mGenerator != null) return;
+
             String dest = mEditDestFilename.Text;
             if (File.Exists(dest)) {
                 if (MessageBox.Show(
-                        this,
+                        mButtonGenerate,
                         String.Format("File {0} already exists. Do you want to overwrite it?", dest),
                         "Generate Movie",
                         MessageBoxButtons.YesNo) == DialogResult.No) {
@@ -274,26 +290,50 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 }                    
             }
 
-            try {
-                mStatusBar.Text = "Parsing KMX...";
-                object trackData = parseKmxOrKmz(mEditTrackFilename.Text);
+            mStatusBar.Text = "Parsing KMX...";
+            TrackParser trackData = parseKmxOrKmz(mEditTrackFilename.Text);
 
-                mStatusBar.Text = "Generating video...";
+            mGenerator = new Generator(
+                    Convert.ToInt32(mEditFps.Text),
+                    Convert.ToInt32(mEditSx.Text),
+                    Convert.ToInt32(mEditSy.Text),
+                    mPreviewPicture.Size,
+                    trackData,
+                    dest);
+            mGenerator.mOnUpdateEvent += new OnGeneratorUpdate(onUpdateEvent);
+            mGenerator.Start();
 
-                // TODO get these from UI with sensible defaults
-                int sx = 640;
-                int sy = 480;
-                int fps = 30;
+            updateButtons();
+        }
 
-                // TODO move this to a thread with periodic UI updates
-                generateMovie(fps, sx, sy, trackData, dest);
-
-            } finally {
-                mStatusBar.Text = "Done";
+        private void stopGenerator() {
+            if (mGenerator != null) {
+                mGenerator.Stop();
+                mGenerator.Dispose();
+                mGenerator = null;
             }
         }
 
-        private object parseKmxOrKmz(string kmxPath) {
+        void onUpdateEvent(int frame, int maxFrame, Image image) {
+            if (frame == 0) {
+                // This signals the first call of the generator
+                mStatusBar.Text = "Generating video...";
+                mProgressBar.Maximum = maxFrame;
+            } else if (frame == maxFrame) {
+                // This signals the generator is done.
+                mStatusBar.Text = "Done";
+                stopGenerator();
+                updateButtons();
+            } else {
+                mStatusBar.Text = String.Format("{0}/{1}", frame, maxFrame);
+            }
+
+            mProgressBar.Value = frame;
+
+            if (image != null) mPreviewPicture.Image = image;
+        }
+
+        private TrackParser parseKmxOrKmz(string kmxPath) {
             XmlDocument doc = new XmlDocument();
 
             if (ZipFile.IsZipFile(kmxPath)) {
@@ -302,51 +342,17 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                         // We take the first name that ends with .kmx
                         if (ze.FileName.EndsWith(".kmx")) {
                             doc.Load(ze.InputStream);
-                            return parseKmxDoc(doc);
+                            return new TrackParser(doc);
                         }
                     }
                 }
             } else {
                 // Read the kmx file directly
                 doc.Load(kmxPath);
-                return parseKmxDoc(doc);
+                return new TrackParser(doc);
             }
 
             return null;
         }
-
-        private object parseKmxDoc(XmlDocument doc) {
-            return null;
-        }
-
-        private void generateMovie(int fps, int sx, int sy, object trackData, String destFilename) {
-
-            using (AviWriter aw = new AviWriter()) {
-                Bitmap bmp = aw.Open(destFilename, (uint)fps, sx, sy);
-
-                using (Graphics g = Graphics.FromImage(bmp)) {
-                    using (Brush gray = new SolidBrush(Color.Gray),
-                                 yellow = new SolidBrush(Color.Yellow)) {
-
-                        // Test: 10 seconds at the given fps
-                        int nbFrames = 10 * (int)fps;
-
-                        for (int frame = 0; frame < nbFrames; frame++) {
-                            g.FillRectangle(gray, 0, 0, sx, sy);
-
-                            float x = 20 + (float)(sx - 40) / nbFrames * frame;
-                            float y = sy - 20 - (float)(sy - 40) / nbFrames * frame;
-
-                            g.FillEllipse(yellow, x - 20, y - 20, 40, 40);
-
-                            aw.AddFrame();
-
-                            mStatusBar.Text = String.Format("{0}/{1}", frame, nbFrames);
-                        }
-                    }
-                } // using Graphics
-            } // using AviWriter
-        }
-
     }
 }
