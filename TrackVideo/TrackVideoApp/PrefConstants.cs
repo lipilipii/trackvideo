@@ -51,6 +51,9 @@ namespace Alfray.TrackVideo.TrackVideoApp
 
         public const string kLastKmxPath = "last-kmx-path";
         public const string kLastDestPath = "last-dest-path";
+        public const string kLastFps = "last-fps";
+        public const string kLastSx = "last-sy";
+        public const string kLastSy = "last-sy";
 
 
 	} // class RPrefConstants
