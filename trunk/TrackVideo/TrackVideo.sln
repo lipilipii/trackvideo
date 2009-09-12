@@ -1,0 +1,55 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrackVideoApp", "TrackVideoApp\TrackVideoApp.csproj", "{0D2F2A7B-75AC-4D84-9BF2-F43D790571FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibUtils2", "libutils\LibUtils2\LibUtils2.csproj", "{BB23CCE6-E98D-465C-B2EE-7556DB030394}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AviWriter", "AviWriter\AviWriter.csproj", "{87F9B3D1-7EF2-4ED6-80E6-E1EDC35F7C74}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zip Partial DLL", "DotNetZip\Zip Partial DLL\Zip Partial DLL.csproj", "{D3B0AD67-44D8-4B3D-BED9-CE1FD6DE2C5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zlib", "DotNetZip\Zlib\Zlib.csproj", "{9816BA86-9250-4C00-A912-25F07F8677D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yeti.mmedia", "ManagedWmfSdk\yeti.mmedia\yeti.mmedia.csproj", "{315EE7BF-EAE2-42C0-BFC6-CCA9160F3CFE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yeti.wmfsdk", "ManagedWmfSdk\yeti.wmfsdk\yeti.wmfsdk.csproj", "{FECB5BEB-AB05-454A-BB14-6A554E897274}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D2F2A7B-75AC-4D84-9BF2-F43D790571FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D2F2A7B-75AC-4D84-9BF2-F43D790571FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D2F2A7B-75AC-4D84-9BF2-F43D790571FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D2F2A7B-75AC-4D84-9BF2-F43D790571FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB23CCE6-E98D-465C-B2EE-7556DB030394}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB23CCE6-E98D-465C-B2EE-7556DB030394}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB23CCE6-E98D-465C-B2EE-7556DB030394}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB23CCE6-E98D-465C-B2EE-7556DB030394}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87F9B3D1-7EF2-4ED6-80E6-E1EDC35F7C74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87F9B3D1-7EF2-4ED6-80E6-E1EDC35F7C74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87F9B3D1-7EF2-4ED6-80E6-E1EDC35F7C74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87F9B3D1-7EF2-4ED6-80E6-E1EDC35F7C74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3B0AD67-44D8-4B3D-BED9-CE1FD6DE2C5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3B0AD67-44D8-4B3D-BED9-CE1FD6DE2C5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3B0AD67-44D8-4B3D-BED9-CE1FD6DE2C5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3B0AD67-44D8-4B3D-BED9-CE1FD6DE2C5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9816BA86-9250-4C00-A912-25F07F8677D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9816BA86-9250-4C00-A912-25F07F8677D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9816BA86-9250-4C00-A912-25F07F8677D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9816BA86-9250-4C00-A912-25F07F8677D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{315EE7BF-EAE2-42C0-BFC6-CCA9160F3CFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{315EE7BF-EAE2-42C0-BFC6-CCA9160F3CFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{315EE7BF-EAE2-42C0-BFC6-CCA9160F3CFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{315EE7BF-EAE2-42C0-BFC6-CCA9160F3CFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FECB5BEB-AB05-454A-BB14-6A554E897274}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FECB5BEB-AB05-454A-BB14-6A554E897274}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FECB5BEB-AB05-454A-BB14-6A554E897274}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FECB5BEB-AB05-454A-BB14-6A554E897274}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
