@@ -1,0 +1,5 @@
+Package: AviWriter
+Author:  Rene Nyffenegger
+Source:  http://www.adp-gmbh.ch/csharp/avi/write_avi.html
+License: Assumed public license
+Date:    2009-09-11

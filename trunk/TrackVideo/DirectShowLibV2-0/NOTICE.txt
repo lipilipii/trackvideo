@@ -1,0 +1,5 @@
+Package: DirectShow .Net
+Author:  kawaic, snarfle
+Source:  http://sourceforge.net/projects/directshownet/
+License: LGPL
+Date:    2009-09-11
