@@ -251,7 +251,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private void onBrowseTrack() {
             OpenFileDialog fd = new OpenFileDialog();
             fd.InitialDirectory = mEditTrackFilename.Text;
-            fd.Filter = "Google Earth files (.kmx, kmz)|*.km?|All files (*.*)|*.*";
+            fd.Filter = "Google Earth files (.kml, kmz)|*.km?|All files (*.*)|*.*";
             fd.FilterIndex = 1;
 
             if (fd.ShowDialog() == DialogResult.OK) {
@@ -290,7 +290,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 }                    
             }
 
-            mStatusBar.Text = "Parsing KMX...";
+            mStatusBar.Text = "Parsing KML...";
             TrackParser trackData = parseKmxOrKmz(mEditTrackFilename.Text);
 
             mGenerator = new Generator(
@@ -340,14 +340,20 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 using (ZipFile zf = ZipFile.Read(kmxPath)) {
                     foreach (ZipEntry ze in zf) {
                         // We take the first name that ends with .kmx
-                        if (ze.FileName.EndsWith(".kmx")) {
-                            doc.Load(ze.InputStream);
+                        if (ze.FileName.EndsWith(".kml")) {
+                            mStatusBar.Text = "Parsing " + ze.FileName;
+
+                            MemoryStream ms = new MemoryStream();
+                            ze.Extract(ms);
+                            ms.Seek(0, SeekOrigin.Begin);
+                            doc.Load(ms);
                             return new TrackParser(doc);
                         }
                     }
                 }
             } else {
                 // Read the kmx file directly
+                mStatusBar.Text = "Parsing " + Path.GetFileName(kmxPath);
                 doc.Load(kmxPath);
                 return new TrackParser(doc);
             }
