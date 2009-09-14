@@ -346,14 +346,14 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                             MemoryStream ms = new MemoryStream();
                             ze.Extract(ms);
                             ms.Seek(0, SeekOrigin.Begin);
-                            doc.Load(ms);
-                            return new TrackParser(doc);
+
+                			doc.Load(ms);
+                			return new TrackParser(doc);
                         }
                     }
                 }
             } else {
-                // Read the kmx file directly
-                mStatusBar.Text = "Parsing " + Path.GetFileName(kmxPath);
+                // Read the kml file directly
                 doc.Load(kmxPath);
                 return new TrackParser(doc);
             }
