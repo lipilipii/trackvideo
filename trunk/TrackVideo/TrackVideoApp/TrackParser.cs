@@ -3,6 +3,7 @@ using System;
 using System.Xml;
 using System.Collections.Generic;
 using System.Xml.XPath;
+using System.Text.RegularExpressions;
 
 /*
  * Details on the KML structure we're interested in (using XPath notations):
@@ -53,10 +54,10 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             public int mIndex;
             public double mStartTime;
             public double mLapTime;
-            public List<Dot> mDots;
+            public List<Dot> mDots = new List<Dot>();
         }
 
-        private List<Lap> mLaps;
+        private List<Lap> mLaps = new List<Lap>();
 
         public List<Lap> Laps {
             get {
@@ -75,23 +76,35 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         private Lap parseLap(XmlDocument doc, double startTime, int n) {
-            string expr = String.Format("/kml/Document/Folder[styleUrl='#lap' and name='{0}']/Placemark", n);
+
             try {
-                XmlNodeList nodes = doc.SelectNodes(expr);
+                XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
+                ns.AddNamespace("k", @"http://www.opengis.net/kml/2.2");
+
+                string expr = String.Format("/k:kml/k:Document/k:Folder/k:Folder[k:styleUrl='#lap' and k:name='{0}']/k:Placemark", n);
+                XmlNodeList nodes = doc.SelectNodes(expr, ns);
 
                 if (nodes != null && nodes.Count > 0) {
 
                     Lap l = new Lap();
                     l.mStartTime = startTime;
                     l.mIndex = n;
-                    l.mDots = new List<Dot>();
 
                     foreach (XmlNode node in nodes) {
-                        Dot d = new Dot();
-                        parseDesc(d, node.SelectSingleNode("description"));
-                        parseCoords(d, node.SelectSingleNode("Point/coordinates"));
+                        XmlNode descNode = node.SelectSingleNode("k:description", ns);
+                        XmlNode coordNode = node.SelectSingleNode("k:Point/k:coordinates", ns);
 
-                        l.mDots.Add(d);
+                        if (descNode != null && coordNode != null) {
+                            Dot d = new Dot();
+                            parseDesc(d, descNode);
+                            parseCoords(d, coordNode);
+
+                            l.mDots.Add(d);
+                        }
+                    }
+
+                    if (l.mDots.Count > 0) {
+                        l.mLapTime = l.mDots[l.mDots.Count - 1].mElapsedTime;
                     }
 
                     mLaps.Add(l);
@@ -107,7 +120,45 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         private void parseDesc(Dot d, XmlNode descNode) {
-            throw new NotImplementedException();
+            System.Diagnostics.Debug.Assert(descNode != null);
+
+            string t = descNode.InnerText.ToString().Trim();
+
+            // Regexp:      ... <p> name        = value     </p> ...
+            Regex r = new Regex(@">(?<1>[\w\s]+)=(?<2>[^<]+)<", RegexOptions.Singleline | RegexOptions.Compiled);
+
+            for (Match m = r.Match(t); m.Success; m = m.NextMatch()) {
+                string name  = m.Groups[1].Value;
+                string value = m.Groups[2].Value;
+
+                switch(name) {
+                    case "accel":
+                        d.mAccel = Convert.ToDouble(value);
+                        break;
+                    case "lateral_accel":
+                        d.mLateralAccel = Convert.ToDouble(value);
+                        break;
+                    case "bearing":
+                        d.mBearing = Convert.ToDouble(value);
+                        break;
+                    case "speed":
+                        int space = value.IndexOf(' ');
+                        string num = space > 0 ? value.Substring(0, space) : value;
+                        d.mSpeed = Convert.ToDouble(num);
+                        if (value.IndexOf("mph") > 0) {
+                            d.mSpeed = mph2ms(d.mSpeed);
+                        } else if (value.IndexOf("kmh") > 0) {
+                            d.mSpeed = kmh2ms(d.mSpeed);
+                        }
+                        break;
+                    case "elapsed time":
+                        int col = value.IndexOf(':');
+                        string min = value.Substring(0, col);
+                        string sec = value.Substring(col + 1);
+                        d.mElapsedTime = Convert.ToDouble(min) * 60 + Convert.ToDouble(sec);
+                        break;
+                }
+            }
         }
 
         private void parseCoords(Dot d, XmlNode coordNode) {
@@ -115,11 +166,19 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
             string t = coordNode.InnerText.ToString().Trim();
 
-            string[] ps = t.Split(',');
+            string[] v = t.Split(',');
 
-            d.mLongtiude = Convert.ToDouble(ps[0]);
-            d.mLatitude  = Convert.ToDouble(ps[1]);
-            d.mAccel     = ft2m(Convert.ToDouble(ps[2]));
+            d.mLongtiude = Convert.ToDouble(v[0]);
+            d.mLatitude  = Convert.ToDouble(v[1]);
+            d.mAccel     = ft2m(Convert.ToDouble(v[2]));
+        }
+
+        private double mph2ms(double mph) {
+            return mph * 0.44704;
+        }
+
+        private double kmh2ms(double kmh) {
+            return kmh * 0.277777778;
         }
 
         /// <summary>
