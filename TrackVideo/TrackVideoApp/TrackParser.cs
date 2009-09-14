@@ -39,7 +39,7 @@ using System.Text.RegularExpressions;
 namespace Alfray.TrackVideo.TrackVideoApp {
     public class TrackParser {
 
-        public class Dot {
+        public struct Dot {
             public double mElapsedTime;
             public double mLatitude;
             public double mLongtiude;
@@ -51,27 +51,34 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         public class Lap {
-            public int mIndex;
-            public double mStartTime;
-            public double mLapTime;
-            public List<Dot> mDots = new List<Dot>();
-        }
+            public int Index { get; private set; }
+            public double StartTime { get; private set; }
+            public double LapTime { get; private set; }
+            public List<Dot> Dots { get; private set; }
 
-        private List<Lap> mLaps = new List<Lap>();
+            public Lap(int index, double startTime) {
+                Index = index;
+                StartTime = startTime;
+                Dots = new List<Dot>();
+            }
 
-        public List<Lap> Laps {
-            get {
-                return mLaps;
+            public void addDot(Dot d) {
+                Dots.Add(d);
+                LapTime = d.mElapsedTime;
             }
         }
 
+        public List<Lap> Laps { get; private set; }
+
         public TrackParser(XmlDocument doc) {
+
+            Laps = new List<Lap>(); 
 
             double startTime = 0;
             Lap l = null;
             int n = 1;
             while ((l = parseLap(doc, startTime, n++)) != null) {
-                startTime += l.mLapTime;
+                startTime += l.LapTime;
             }
         }
 
@@ -86,9 +93,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
                 if (nodes != null && nodes.Count > 0) {
 
-                    Lap l = new Lap();
-                    l.mStartTime = startTime;
-                    l.mIndex = n;
+                    Lap l = new Lap(n, startTime);
 
                     foreach (XmlNode node in nodes) {
                         XmlNode descNode = node.SelectSingleNode("k:description", ns);
@@ -99,15 +104,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                             parseDesc(d, descNode);
                             parseCoords(d, coordNode);
 
-                            l.mDots.Add(d);
+                            l.addDot(d);
                         }
                     }
 
-                    if (l.mDots.Count > 0) {
-                        l.mLapTime = l.mDots[l.mDots.Count - 1].mElapsedTime;
-                    }
-
-                    mLaps.Add(l);
+                    Laps.Add(l);
                     return l;
                 }
 
