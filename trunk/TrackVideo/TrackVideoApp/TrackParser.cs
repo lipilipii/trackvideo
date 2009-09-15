@@ -39,7 +39,7 @@ using System.Text.RegularExpressions;
 namespace Alfray.TrackVideo.TrackVideoApp {
     public class TrackParser {
 
-        public struct Dot {
+        public class Dot {
             public double mElapsedTime;
             public double mLatitude;
             public double mLongtiude;
@@ -70,6 +70,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         public List<Lap> Laps { get; private set; }
 
+        public double TotalTime { get; private set; }
+
         public TrackParser(XmlDocument doc) {
 
             Laps = new List<Lap>(); 
@@ -80,6 +82,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             while ((l = parseLap(doc, startTime, n++)) != null) {
                 startTime += l.LapTime;
             }
+
+            TotalTime = startTime;
         }
 
         private Lap parseLap(XmlDocument doc, double startTime, int n) {
@@ -174,10 +178,16 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             d.mAccel     = ft2m(Convert.ToDouble(v[2]));
         }
 
+        /// <summary>
+        /// Converts mph in m/s
+        /// </summary>
         private double mph2ms(double mph) {
             return mph * 0.44704;
         }
 
+        /// <summary>
+        /// Converts km/h in m/s
+        /// </summary>
         private double kmh2ms(double kmh) {
             return kmh * 0.277777778;
         }

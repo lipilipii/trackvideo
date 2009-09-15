@@ -49,6 +49,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private DebugForm mDebugForm;
         private PrefForm mPrefForm;
         private bool mIsFirstFormActivated = true;
+        private bool mRequestUserStop = false;
         private Generator mGenerator;
 
         private class ListBoxDoubleBuffer : ListBox {
@@ -158,9 +159,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             mEditDestFilename.Text  = p[PrefConstants.kLastDestPath];
 
             // restore generate options with default values
-            mEditFps.Text = p.getString(PrefConstants.kLastFps,  "30");
-            mEditSx.Text  = p.getString(PrefConstants.kLastSx,  "640");
-            mEditSy.Text  = p.getString(PrefConstants.kLastSy,  "480");
+            mEditFps.Text     = p.getString(PrefConstants.kLastFps,  "30");
+            mEditMovieSx.Text = p.getString(PrefConstants.kLastMovieSx, "1280");
+            mEditMovieSy.Text = p.getString(PrefConstants.kLastMovieSy,  "720");
+            mEditTrackSx.Text = p.getString(PrefConstants.kLastTrackSx,  "500");
+            mEditTrackSy.Text = p.getString(PrefConstants.kLastTrackSy,  "200");
 
             // <insert other setting stuff here>
         }
@@ -175,6 +178,13 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
             // save position & size of this window
             p.SetRect(PrefConstants.kMainForm, this.Bounds);
+
+            // save sizes
+            p[PrefConstants.kLastFps] = mEditFps.Text;
+            p[PrefConstants.kLastMovieSx] = mEditMovieSx.Text;
+            p[PrefConstants.kLastMovieSy] = mEditMovieSy.Text;
+            p[PrefConstants.kLastTrackSx] = mEditTrackSx.Text;
+            p[PrefConstants.kLastTrackSy] = mEditTrackSy.Text;
 
             // save settings
             p.Save();
@@ -236,8 +246,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         private void updateButtons() {
-            mButtonGenerate.Enabled = mGenerator == null &&
-                                      File.Exists(mEditTrackFilename.Text) &&
+            mButtonGenerate.Text = (mGenerator == null) ? "Start" : "Stop";
+            mButtonGenerate.Enabled = File.Exists(mEditTrackFilename.Text) &&
                                       mEditDestFilename.Text != "";
         }
 
@@ -277,7 +287,10 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         private void onGenerate() {
-            if (mGenerator != null) return;
+            if (mGenerator != null) {
+                mRequestUserStop = true;
+                return;
+            }
 
             String dest = mEditDestFilename.Text;
             if (File.Exists(dest)) {
@@ -295,12 +308,15 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
             mGenerator = new Generator(
                     Convert.ToInt32(mEditFps.Text),
-                    Convert.ToInt32(mEditSx.Text),
-                    Convert.ToInt32(mEditSy.Text),
+                    Convert.ToInt32(mEditMovieSx.Text),
+                    Convert.ToInt32(mEditMovieSy.Text),
+                    Convert.ToInt32(mEditTrackSx.Text),
+                    Convert.ToInt32(mEditTrackSy.Text),
                     mPreviewPicture.Size,
                     trackData,
                     dest);
-            mGenerator.mOnUpdateEvent += new OnGeneratorUpdate(onUpdateEvent);
+            mGenerator.mOnUpdateCallback = onUpdateCallback;
+            mRequestUserStop = false;
             mGenerator.Start();
 
             updateButtons();
@@ -314,7 +330,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             }
         }
 
-        void onUpdateEvent(int frame, int maxFrame, Image image) {
+        private bool onUpdateCallback(int frame, int maxFrame, Image image) {
             if (frame == 0) {
                 // This signals the first call of the generator
                 mStatusBar.Text = "Generating video...";
@@ -331,6 +347,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             mProgressBar.Value = frame;
 
             if (image != null) mPreviewPicture.Image = image;
+
+            return mRequestUserStop;
         }
 
         private TrackParser parseKmxOrKmz(string kmxPath) {
