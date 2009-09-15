@@ -71,8 +71,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         public List<Lap> Laps   { get; private set; }
         public double TotalTime { get; private set; }
 
-        public double TotalTime { get; private set; }
-
         public TrackParser(XmlDocument doc) {
 
             Laps = new List<Lap>(); 

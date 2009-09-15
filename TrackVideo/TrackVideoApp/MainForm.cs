@@ -324,7 +324,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         private void stopGenerator() {
             if (mGenerator != null) {
-                mGenerator.Stop();
                 mGenerator.Dispose();
                 mGenerator = null;
             }
