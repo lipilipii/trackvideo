@@ -32,6 +32,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private TrackParser mTrackData;
         private string mDestFilename;
 
+        private static const int kTrackBorder = 5;
+
         /// <summary>
         /// All access to the AVI Writer must be done from the main UI thread
         /// </summary>
@@ -43,6 +45,20 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         private delegate void AddFrame();
         private AddFrame mAddFrame;
+
+        /// <summary>
+        /// Projection to convert a gps coordinate in a pixel.
+        /// We'll simplify and naively assume the gps coordinates are "flat" and "square".
+        /// So pixel = (gps_coord - gps_offset) * gps_scale + pixel_offset;
+        /// </summary>
+        private class Gps2PixelProjection {
+            public double mGpsOffsetX;
+            public double mGpsOffsetY;
+            public double mGpsScaleX;
+            public double mGpsScaleY;
+            public double mPixelOffsetX;
+            public double mPixelOffsetY;
+        }
 
         public Generator(int fps,
                         int movieSx,
@@ -119,6 +135,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     int nbFrames = (int)(mTrackData.TotalTime * fps);
 
                     // prepare track drawing (map GPS coord => screen coord: offset + scale)
+                    Rectangle trackRect;
+                    Gps2PixelProjection trackProj = prepareTrackProj(bgRect, td, out trackRect);
+                    Image trackBmp = prepareTrackBmp(trackRect, trackProj, td);
 
                     // prepare g-meter pos
 
@@ -248,6 +267,79 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     asyncUpdate(nbFrames, nbFrames, new Bitmap(mAviBmp, mPreviewSize));
                 } // using Brush
             } // using Graphics
+        }
+
+        private Image prepareTrackBmp(Rectangle trackRect, Gps2PixelProjection trackProj, TrackParser td) {
+            Bitmap bmp = new Bitmap(trackRect.Width, trackRect.Height);
+
+            TODO continue here
+
+            return bmp;
+        }
+
+        private Gps2PixelProjection prepareTrackProj(Rectangle rect, TrackParser td, out Rectangle trackRect) {
+
+            // we need at least one point to do something
+            if (td.Laps.Count == 0 || td.Laps[0].Dots.Count == 0) {
+                return null;
+            }
+
+            double minLong = Double.PositiveInfinity,
+                   maxLong = Double.NegativeInfinity,
+                   minLat  = Double.PositiveInfinity,
+                   maxLat  = Double.NegativeInfinity;
+
+            foreach (TrackParser.Lap l in td.Laps) {
+                foreach (TrackParser.Dot d in l.Dots) {
+                    minLong = Math.Min(minLong, d.mLongtiude);
+                    maxLong = Math.Max(maxLong, d.mLongtiude);
+                    minLat  = Math.Min(minLat , d.mLatitude);
+                    maxLat  = Math.Max(maxLat , d.mLatitude);
+                }
+            }
+
+            // we want to map the min..maxLong(+X)..Lat(-Y) to the given rect
+            // rect top left corner (it's x/y base) corresponds to minLong/maxLat.
+
+            float x = rect.X;
+            float y = rect.Y;
+            float w = rect.Width;
+            float h = rect.Height;
+
+            // currently use a square part of the dest rect based on its height
+            w = h;
+
+            // adjust for track border
+            x += kTrackBorder;
+            y += kTrackBorder;
+            w -= 2 * kTrackBorder;
+            h -= 2 * kTrackBorder;
+
+            trackRect = new Rectangle((int)x, (int)y, (int)w, (int)h);
+
+            // Compute offset and scaling to transform a coord point into a screen point
+
+            Gps2PixelProjection proj = new Gps2PixelProjection();
+
+            proj.mGpsOffsetX = minLong;
+            proj.mGpsOffsetY = maxLat;
+
+            proj.mPixelOffsetX = x;
+            proj.mPixelOffsetY = y;
+
+            proj.mGpsScaleX = (maxLong > minLong) ? w / (maxLong - minLong) : 0;
+            proj.mGpsScaleY = (maxLat > minLat) ? h / (minLat - maxLat) : 0;
+
+            return proj;
+        }
+
+        private void transformGpsCoord(double longitude, double latitude,
+            Gps2PixelProjection proj,
+            PointF outPoint) {
+            double px = (longitude - proj.mGpsOffsetX) * proj.mGpsScaleX + proj.mPixelOffsetX;
+            double py = (latitude - proj.mGpsOffsetY) * proj.mGpsScaleY + proj.mPixelOffsetY;
+            outPoint.X = (float)px;
+            outPoint.Y = (float)py;
         }
 
         // this is invoked in the main UI thread just above
