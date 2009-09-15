@@ -16,6 +16,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
     /// </summary>
     public delegate bool OnGeneratorUpdate(int frame, int maxFrame, Image image);
 
+    /// <summary>
+    /// Video overlay generator.
+    /// </summary>
     public class Generator : IDisposable {
 
         private bool mThreadMustStop;
@@ -59,8 +62,14 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             mDestFilename = destFilename;
         }
 
+        /// <summary>
+        /// Starts rendering in a thread. Each Start() call *must* be balanced
+        /// by a Dispose() call or bad things will happen.
+        /// </summary>
         public void Start() {
             System.Diagnostics.Debug.Assert(mAviWriter == null);
+            System.Diagnostics.Debug.Assert(mThread == null);
+            if (mThread != null) return;  // for sanity
 
             mAddFrame = doAddFrame;
             mAviWriter = new AviWriter();
@@ -72,19 +81,22 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             mThread.Start();
         }
 
-        public void Stop() {
-            Thread t = null;
-            lock (this) {
-                t = mThread;
-                mThread = null;
-                if (t != null) mThreadMustStop = true; ;
-            }
-            if (t != null) t.Join();
-        }
-
+        /// <summary>
+        /// Stops the rendering thread, if present.
+        /// Disposes the AVI writer resources.
+        /// </summary>
         public void Dispose() {
+            if (mThread != null) {
+                mThreadMustStop = true;
+                mThread.Join();
+                mThread = null;
+            }
+
             mAviBmp = null;
-            if (mAviWriter != null) mAviWriter.Dispose();
+            if (mAviWriter != null) {
+                mAviWriter.Dispose();
+                mAviWriter = null;
+            }
         }
 
         private void threadEntryPoint() {
@@ -233,14 +245,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     // Make sure to tell owner that the generator is done
                     // This one must be async -- this thread will quit and the owner will
                     // try to join to wait for the thread to finish.
-                    lock (this) {
-                        mThread = null;
-                    }
                     asyncUpdate(nbFrames, nbFrames, new Bitmap(mAviBmp, mPreviewSize));
                 } // using Brush
             } // using Graphics
-
-            Dispose();
         }
 
         // this is invoked in the main UI thread just above
@@ -361,7 +368,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 // *asynhronous* thread-safe event call
                 // (will invoke the method from the main form in the context of the main thread)
                 object[] args = { frame, maxFrame, image };
-                MainModule.MainForm.Invoke(mOnUpdateCallback, args);
+                MainModule.MainForm.BeginInvoke(mOnUpdateCallback, args);
             }
         }
 
