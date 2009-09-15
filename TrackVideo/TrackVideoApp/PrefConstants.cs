@@ -49,11 +49,13 @@ namespace Alfray.TrackVideo.TrackVideoApp
 		public const string kPrefForm = "forms-pref";
 		public const string kDebugForm = "forms-debug";
 
-        public const string kLastKmxPath = "last-kmx-path";
+        public const string kLastKmxPath  = "last-kmx-path";
         public const string kLastDestPath = "last-dest-path";
-        public const string kLastFps = "last-fps";
-        public const string kLastSx = "last-sy";
-        public const string kLastSy = "last-sy";
+        public const string kLastFps      = "last-fps";
+        public const string kLastMovieSx  = "last-movie-sx";
+        public const string kLastMovieSy  = "last-movie-sy";
+        public const string kLastTrackSx  = "last-track-sx";
+        public const string kLastTrackSy  = "last-track-sy";
 
 
 	} // class RPrefConstants

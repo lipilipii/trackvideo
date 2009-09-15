@@ -83,14 +83,19 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mEditFps = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.mEditSx = new System.Windows.Forms.TextBox();
-            this.mEditSy = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.mEditMovieSy = new System.Windows.Forms.TextBox();
+            this.mEditMovieSx = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.mPreviewPicture = new System.Windows.Forms.PictureBox();
             this.mProgressBar = new System.Windows.Forms.ProgressBar();
-            this.label6 = new System.Windows.Forms.Label();
+            this.mPreviewPicture = new System.Windows.Forms.PictureBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.mEditTrackSy = new System.Windows.Forms.TextBox();
+            this.mEditTrackSx = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mPreviewPicture)).BeginInit();
@@ -180,7 +185,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             // mStatusBar
             // 
             this.mStatusBar.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.mStatusBar.Location = new System.Drawing.Point(0, 172);
+            this.mStatusBar.Location = new System.Drawing.Point(0, 254);
             this.mStatusBar.Name = "mStatusBar";
             this.mStatusBar.Size = new System.Drawing.Size(492, 22);
             this.mStatusBar.TabIndex = 0;
@@ -244,7 +249,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             // 
             // mButtonGenerate
             // 
-            this.mButtonGenerate.Location = new System.Drawing.Point(6, 19);
+            this.mButtonGenerate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.mButtonGenerate.Location = new System.Drawing.Point(6, 157);
             this.mButtonGenerate.Name = "mButtonGenerate";
             this.mButtonGenerate.Size = new System.Drawing.Size(75, 23);
             this.mButtonGenerate.TabIndex = 7;
@@ -273,97 +279,152 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)));
+            this.groupBox1.Controls.Add(this.label10);
+            this.groupBox1.Controls.Add(this.label9);
+            this.groupBox1.Controls.Add(this.label7);
+            this.groupBox1.Controls.Add(this.label8);
+            this.groupBox1.Controls.Add(this.mEditTrackSy);
+            this.groupBox1.Controls.Add(this.mEditTrackSx);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.mEditSy);
-            this.groupBox1.Controls.Add(this.mEditSx);
+            this.groupBox1.Controls.Add(this.mEditMovieSy);
+            this.groupBox1.Controls.Add(this.mEditMovieSx);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.mEditFps);
             this.groupBox1.Location = new System.Drawing.Point(12, 62);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(114, 104);
+            this.groupBox1.Size = new System.Drawing.Size(114, 186);
             this.groupBox1.TabIndex = 10;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Options";
             // 
-            // mEditSx
+            // label5
             // 
-            this.mEditSx.Location = new System.Drawing.Point(46, 47);
-            this.mEditSx.MaxLength = 10;
-            this.mEditSx.Name = "mEditSx";
-            this.mEditSx.Size = new System.Drawing.Size(53, 20);
-            this.mEditSx.TabIndex = 10;
-            // 
-            // mEditSy
-            // 
-            this.mEditSy.Location = new System.Drawing.Point(46, 73);
-            this.mEditSy.MaxLength = 10;
-            this.mEditSy.Name = "mEditSy";
-            this.mEditSy.Size = new System.Drawing.Size(53, 20);
-            this.mEditSy.TabIndex = 11;
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(5, 92);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(38, 13);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Height";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(5, 50);
+            this.label4.Location = new System.Drawing.Point(5, 66);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(35, 13);
             this.label4.TabIndex = 12;
             this.label4.Text = "Width";
             // 
-            // label5
+            // mEditContainerSy
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(5, 76);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(38, 13);
-            this.label5.TabIndex = 13;
-            this.label5.Text = "Height";
+            this.mEditMovieSy.Location = new System.Drawing.Point(46, 89);
+            this.mEditMovieSy.MaxLength = 10;
+            this.mEditMovieSy.Name = "mEditContainerSy";
+            this.mEditMovieSy.Size = new System.Drawing.Size(53, 20);
+            this.mEditMovieSy.TabIndex = 11;
+            // 
+            // mEditContainerSx
+            // 
+            this.mEditMovieSx.Location = new System.Drawing.Point(46, 63);
+            this.mEditMovieSx.MaxLength = 10;
+            this.mEditMovieSx.Name = "mEditContainerSx";
+            this.mEditMovieSx.Size = new System.Drawing.Size(53, 20);
+            this.mEditMovieSx.TabIndex = 10;
             // 
             // groupBox2
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Controls.Add(this.mProgressBar);
             this.groupBox2.Controls.Add(this.mPreviewPicture);
             this.groupBox2.Controls.Add(this.mButtonGenerate);
             this.groupBox2.Location = new System.Drawing.Point(132, 62);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(348, 104);
+            this.groupBox2.Size = new System.Drawing.Size(348, 186);
             this.groupBox2.TabIndex = 11;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Generation";
             // 
+            // mProgressBar
+            // 
+            this.mProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.mProgressBar.Location = new System.Drawing.Point(87, 157);
+            this.mProgressBar.Name = "mProgressBar";
+            this.mProgressBar.Size = new System.Drawing.Size(255, 23);
+            this.mProgressBar.TabIndex = 9;
+            // 
             // mPreviewPicture
             // 
-            this.mPreviewPicture.Location = new System.Drawing.Point(87, 19);
+            this.mPreviewPicture.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.mPreviewPicture.Location = new System.Drawing.Point(6, 19);
             this.mPreviewPicture.Name = "mPreviewPicture";
-            this.mPreviewPicture.Size = new System.Drawing.Size(255, 79);
+            this.mPreviewPicture.Size = new System.Drawing.Size(336, 132);
             this.mPreviewPicture.TabIndex = 8;
             this.mPreviewPicture.TabStop = false;
             // 
-            // mProgressBar
+            // label7
             // 
-            this.mProgressBar.Location = new System.Drawing.Point(6, 70);
-            this.mProgressBar.Name = "mProgressBar";
-            this.mProgressBar.Size = new System.Drawing.Size(75, 23);
-            this.mProgressBar.TabIndex = 9;
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(5, 162);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(38, 13);
+            this.label7.TabIndex = 17;
+            this.label7.Text = "Height";
             // 
-            // label6
+            // label8
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(7, 49);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(51, 13);
-            this.label6.TabIndex = 10;
-            this.label6.Text = "Progress:";
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(5, 136);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(35, 13);
+            this.label8.TabIndex = 16;
+            this.label8.Text = "Width";
+            // 
+            // mEditTrackSy
+            // 
+            this.mEditTrackSy.Location = new System.Drawing.Point(46, 159);
+            this.mEditTrackSy.MaxLength = 10;
+            this.mEditTrackSy.Name = "mEditTrackSy";
+            this.mEditTrackSy.Size = new System.Drawing.Size(53, 20);
+            this.mEditTrackSy.TabIndex = 15;
+            // 
+            // mEditTrackSx
+            // 
+            this.mEditTrackSx.Location = new System.Drawing.Point(46, 133);
+            this.mEditTrackSx.MaxLength = 10;
+            this.mEditTrackSx.Name = "mEditTrackSx";
+            this.mEditTrackSx.Size = new System.Drawing.Size(53, 20);
+            this.mEditTrackSx.TabIndex = 14;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label9.Location = new System.Drawing.Point(5, 47);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(65, 13);
+            this.label9.TabIndex = 18;
+            this.label9.Text = "Container:";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label10.Location = new System.Drawing.Point(5, 117);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(44, 13);
+            this.label10.TabIndex = 19;
+            this.label10.Text = "Track:";
             // 
             // MainForm
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-            this.ClientSize = new System.Drawing.Size(492, 194);
+            this.ClientSize = new System.Drawing.Size(492, 276);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label2);
@@ -374,6 +435,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.Controls.Add(this.label1);
             this.Controls.Add(this.mStatusBar);
             this.Menu = this.mMenuMain;
+            this.MinimumSize = new System.Drawing.Size(500, 330);
             this.Name = "MainForm";
             this.Text = "Track Video";
             this.Activated += new System.EventHandler(this.MainForm_Activated);
@@ -381,7 +443,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mPreviewPicture)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -398,6 +459,23 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private Button mButtonBrowseDest;
         private Label label2;
         private Button mButtonGenerate;
+
+        private TextBox mEditFps;
+        private Label label3;
+        private GroupBox groupBox1;
+        private Label label5;
+        private Label label4;
+        private TextBox mEditMovieSy;
+        private TextBox mEditMovieSx;
+        private GroupBox groupBox2;
+        private ProgressBar mProgressBar;
+        private PictureBox mPreviewPicture;
+        private Label label7;
+        private Label label8;
+        private TextBox mEditTrackSy;
+        private TextBox mEditTrackSx;
+        private Label label10;
+        private Label label9;
  
 
 
@@ -438,17 +516,5 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private void mButtonGenerate_Click(object sender, EventArgs e) {
             onGenerate();
         }
-
-        private TextBox mEditFps;
-        private Label label3;
-        private GroupBox groupBox1;
-        private Label label5;
-        private Label label4;
-        private TextBox mEditSy;
-        private TextBox mEditSx;
-        private GroupBox groupBox2;
-        private Label label6;
-        private ProgressBar mProgressBar;
-        private PictureBox mPreviewPicture;
    }
 }
