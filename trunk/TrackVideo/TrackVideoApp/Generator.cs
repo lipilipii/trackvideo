@@ -33,6 +33,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private string mDestFilename;
 
         private static const int kTrackBorder = 5;
+        private static const int kTrackWidth = 5;
 
         /// <summary>
         /// All access to the AVI Writer must be done from the main UI thread
@@ -126,7 +127,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             using (Graphics g = Graphics.FromImage(mAviBmp)) {
                 using (Brush chromaColor = new SolidBrush(Color.Blue),
                              bgColor = new SolidBrush(Color.Gray),
-                             trackColor = new SolidBrush(Color.Yellow),
                              posColor = new SolidBrush(Color.Red),
                              textColor = new SolidBrush(Color.Orange)) {
 
@@ -137,7 +137,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     // prepare track drawing (map GPS coord => screen coord: offset + scale)
                     Rectangle trackRect;
                     Gps2PixelProjection trackProj = prepareTrackProj(bgRect, td, out trackRect);
-                    Image trackBmp = prepareTrackBmp(trackRect, trackProj, td);
+                    Bitmap trackBmp = prepareTrackBmp(trackRect, trackProj, td);
 
                     // prepare g-meter pos
 
@@ -238,6 +238,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
                             // draw track + current pos
 
+                            drawTrackPos(g, trackRect, trackBmp, currGpsLong, currGpsLat);
+
                             // draw text
                             drawText(g, textColor, textFont, textPos,
                                 currSpeed, currAccel, currLatAccel, currTime,
@@ -269,18 +271,54 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             } // using Graphics
         }
 
-        private Image prepareTrackBmp(Rectangle trackRect, Gps2PixelProjection trackProj, TrackParser td) {
-            Bitmap bmp = new Bitmap(trackRect.Width, trackRect.Height);
-
-            TODO continue here
-
-            return bmp;
+        private double interpolate(double value1, double value2, double progress) {
+            return value1 + (value2 - value1) * progress;
         }
 
-        private Gps2PixelProjection prepareTrackProj(Rectangle rect, TrackParser td, out Rectangle trackRect) {
 
+        // --- Update & threading ----
+
+        // this is invoked in the main UI thread from the main loop
+        private void doAddFrame() {
+            mAviWriter.AddFrame();
+        }
+
+        /// <summary>
+        /// Invokes the update synchronously in the context of the main UI thread.
+        /// </summary>
+        private bool syncUpdate(int frame, int maxFrame, Image image) {
+            if (mOnUpdateCallback != null) {
+                object[] args = { frame, maxFrame, image };
+
+                object ret = MainModule.MainForm.Invoke(mOnUpdateCallback, args);
+
+                if (ret is Boolean) {
+                    return Convert.ToBoolean((Boolean)ret);
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Invokes the update event asynchronously in the context of the main UI thread.)
+        /// </summary>
+        private void asyncUpdate(int frame, int maxFrame, Image image) {
+            if (mOnUpdateCallback != null) {
+                // *asynhronous* thread-safe event call
+                // (will invoke the method from the main form in the context of the main thread)
+                object[] args = { frame, maxFrame, image };
+                MainModule.MainForm.BeginInvoke(mOnUpdateCallback, args);
+            }
+        }
+
+
+        // --- GPS to track rect & bitmap ---
+
+        private Gps2PixelProjection prepareTrackProj(Rectangle rect, TrackParser td, out Rectangle trackRect) {
             // we need at least one point to do something
             if (td.Laps.Count == 0 || td.Laps[0].Dots.Count == 0) {
+                trackRect = Rectangle.Empty;
                 return null;
             }
 
@@ -342,13 +380,111 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             outPoint.Y = (float)py;
         }
 
-        // this is invoked in the main UI thread just above
-        private void doAddFrame() {
-            mAviWriter.AddFrame();
+        private Bitmap prepareTrackBmp(Rectangle trackRect, Gps2PixelProjection trackProj, TrackParser td) {
+            // We need at least a lap to draw something
+            if (td.Laps.Count == 0) return null;
+
+            // We'll draw one of the laps. We try to avoid the first and the last one and we try to pick
+            // the lap with the most dots.
+            TrackParser.Lap currLap = null;
+            int maxDots = -1;
+            for (int i = 0, n = td.Laps.Count; i < n; i++) {
+                // remap [0..n-3..n-2..n-1] to [1..n-2..0..n-1], that is we start at the second track
+                // and we do process the first track just before the last one.
+                int j = i + 1;
+                if (j == n - 1) j = 0;
+                else if (j == n) j = n - 1;
+
+                TrackParser.Lap l = td.Laps[j];
+                int nd = l.Dots.Count;
+                if (nd > n) {
+                    currLap = l;
+                    maxDots = nd;
+                }
+            }
+
+            // We should have a lap now. But it should also have more than one point to be useful.
+            System.Diagnostics.Debug.Assert(currLap != null);
+            if (currLap == null && maxDots > 1) return null;
+
+            int w = trackRect.Width;
+            int h = trackRect.Height;
+            Bitmap bmp = new Bitmap(w, h);
+
+            using (Graphics g = Graphics.FromImage(bmp)) {
+                using (Brush bgColor = new SolidBrush(Color.Gray),
+                             trackColor = new SolidBrush(Color.Yellow)) {
+                    using (Pen trackPen = new Pen(trackColor, kTrackWidth)) {
+ 
+                        g.FillRectangle(bgColor, 0, 0, w, h);
+
+                        List<TrackParser.Dot> dots = currLap.Dots;
+                        TrackParser.Dot d = dots[0];
+                        PointF last = new PointF();
+                        PointF next = new PointF();
+
+                        transformGpsCoord(d.mLongtiude, d.mLatitude, trackProj, last);
+
+                        for (int i = 1, n = dots.Count; i <= n; i++) {
+                            d = dots[i == n ? 0 : i];
+                            transformGpsCoord(d.mLongtiude, d.mLatitude, trackProj, next);
+
+                            g.DrawLine(trackPen, last, next);
+
+                            last.X = next.X;
+                            last.Y = next.Y;
+                        }
+                    }
+                }
+            }
+
+            return bmp;
         }
 
-        private double interpolate(double value1, double value2, double progress) {
-            return value1 + (value2 - value1) * progress;
+        private void drawTrackPos(Graphics g, Rectangle trackRect, Bitmap trackBmp, double currGpsLong, double currGpsLat) {
+
+            Color backColor = trackBmp.GetPixel(0, 0);
+            trackBmp.MakeTransparent(backColor);
+
+            g.DrawImageUnscaled(trackBmp, trackRect);
+
+
+            TODO continue here
+        }
+
+
+        // --- Text Stats ---
+
+        private Font prepareText(Rectangle rect, out PointF[] textPos) {
+            textPos = new PointF[12];
+
+            int x = rect.X;
+            int y = rect.Y;
+            int w = rect.Width;
+            int h = rect.Height;
+
+            int tx = x + w * 2 / 5;         // beginning of text in tsx
+            int xh = w * 3 / 5 / 2;     // width of the two half columns
+            int xl = xh * 1 / 3;            // label is 1/3 of each column
+
+            int ty = y;                     // text starts at top of tsy
+            int yl = h / 2 / 3;             // 3 lines use the upper half of tsy
+
+            Font f = new Font(FontFamily.GenericSansSerif, (float)(yl * 0.4));
+            int fh = f.Height / 2;
+
+            int k = 0;
+            for (int j = 0; j < 3; j++) {
+                for (int i = 0; i < 2; i++) {
+                    PointF p = new PointF(tx + xh * i, ty + yl * j + fh);
+                    textPos[k++] = p;
+
+                    p = new PointF(p.X + xl, p.Y);
+                    textPos[k++] = p;
+                }
+            }
+
+            return f;
         }
 
         private void drawText(Graphics g, Brush textColor, Font textFont, PointF[] textPos,
@@ -401,67 +537,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             int centis = (int)(100 * (time - sec));
 
             return String.Format("{0,2:d}:{1,2:d}.{2,2:d}", min, sec, centis);
-        }
-
-        private Font prepareText(Rectangle rect, out PointF[] textPos) {
-            textPos = new PointF[12];
-
-            int x = rect.X;
-            int y = rect.Y;
-            int w = rect.Width;
-            int h = rect.Height;
-
-            int tx = x + w * 2 / 5;         // beginning of text in tsx
-            int xh =     w * 3 / 5 / 2;     // width of the two half columns
-            int xl = xh * 1 / 3;            // label is 1/3 of each column
-
-            int ty = y;                     // text starts at top of tsy
-            int yl = h / 2 / 3;             // 3 lines use the upper half of tsy
-
-            Font f = new Font(FontFamily.GenericSansSerif, (float)(yl * 0.4));
-            int fh = f.Height / 2;
-
-            int k = 0;
-            for (int j = 0; j < 3; j++) {
-                for (int i = 0; i < 2; i++) {
-                    PointF p = new PointF(tx + xh * i, ty + yl * j + fh);
-                    textPos[k++] = p;
-
-                    p = new PointF(p.X + xl, p.Y);
-                    textPos[k++] = p;
-                }
-            }
-
-            return f;
-        }
-
-        /// <summary>
-        /// Invokes the update synchronously in the context of the main UI thread.
-        /// </summary>
-        private bool syncUpdate(int frame, int maxFrame, Image image) {
-            if (mOnUpdateCallback != null) {
-                object[] args = { frame, maxFrame, image };
-                
-                object ret = MainModule.MainForm.Invoke(mOnUpdateCallback, args);
-                
-                if (ret is Boolean) {
-                    return Convert.ToBoolean((Boolean)ret);
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Invokes the update event asynchronously in the context of the main UI thread.)
-        /// </summary>
-        private void asyncUpdate(int frame, int maxFrame, Image image) {
-            if (mOnUpdateCallback != null) {
-                // *asynhronous* thread-safe event call
-                // (will invoke the method from the main form in the context of the main thread)
-                object[] args = { frame, maxFrame, image };
-                MainModule.MainForm.BeginInvoke(mOnUpdateCallback, args);
-            }
         }
 
         /// <summary>
