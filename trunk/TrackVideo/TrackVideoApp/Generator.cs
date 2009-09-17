@@ -32,8 +32,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private TrackParser mTrackData;
         private string mDestFilename;
 
-        private static const int kTrackBorder = 5;
-        private static const int kTrackWidth = 5;
+        private const int kTrackBorder = 5;
+        private const int kTrackWidth = 5;
+        private const int kTrackPosRadius = 5;
 
         /// <summary>
         /// All access to the AVI Writer must be done from the main UI thread
@@ -47,6 +48,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private delegate void AddFrame();
         private AddFrame mAddFrame;
 
+        private CPointF mTempPointF = new CPointF();
+
         /// <summary>
         /// Projection to convert a gps coordinate in a pixel.
         /// We'll simplify and naively assume the gps coordinates are "flat" and "square".
@@ -59,6 +62,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             public double mGpsScaleY;
             public double mPixelOffsetX;
             public double mPixelOffsetY;
+        }
+
+        private class CPointF {
+            public float mX;
+            public float mY;
         }
 
         public Generator(int fps,
@@ -144,7 +152,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     // prepare text positions
 
                     PointF[] textPos;
-                    using (Font textFont = prepareText(bgRect, out textPos)) {
+                    using (Font labelFont = prepareText(bgRect, out textPos),
+                                numFont = new Font(FontFamily.GenericMonospace, labelFont.Size, FontStyle.Bold)) {
 
                         double currSpeed = 0,
                                currAccel = 0,
@@ -237,16 +246,16 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                             g.FillRectangle(bgColor, bgRect);
 
                             // draw track + current pos
+                            drawTrackPos(g, posColor, trackRect, trackBmp, trackProj, currGpsLong, currGpsLat);
 
-                            drawTrackPos(g, trackRect, trackBmp, currGpsLong, currGpsLat);
+                            // draw bearing
+
+                            // TODO
 
                             // draw text
-                            drawText(g, textColor, textFont, textPos,
+                            drawText(g, textColor, labelFont, numFont, textPos,
                                 currSpeed, currAccel, currLatAccel, currTime,
                                 currLapTime, currLapNum, currLastLap);
-
-
-                            //--g.FillEllipse(textColor, x - 20, y - 20, 40, 40);
 
                             // finally dump frame and update preview/progress
                             MainModule.MainForm.Invoke(mAddFrame);
@@ -344,8 +353,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             float w = rect.Width;
             float h = rect.Height;
 
-            // currently use a square part of the dest rect based on its height
-            w = h;
+            // currently use a square part of the dest rect
+            if (w > h) w = h;
+            else h = w;
 
             // adjust for track border
             x += kTrackBorder;
@@ -373,16 +383,16 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         private void transformGpsCoord(double longitude, double latitude,
             Gps2PixelProjection proj,
-            PointF outPoint) {
+            CPointF outPoint) {
             double px = (longitude - proj.mGpsOffsetX) * proj.mGpsScaleX + proj.mPixelOffsetX;
             double py = (latitude - proj.mGpsOffsetY) * proj.mGpsScaleY + proj.mPixelOffsetY;
-            outPoint.X = (float)px;
-            outPoint.Y = (float)py;
+            outPoint.mX = (float)px;
+            outPoint.mY = (float)py;
         }
 
         private Bitmap prepareTrackBmp(Rectangle trackRect, Gps2PixelProjection trackProj, TrackParser td) {
             // We need at least a lap to draw something
-            if (td.Laps.Count == 0) return null;
+            if (td.Laps.Count == 0 || trackProj == null) return null;
 
             // We'll draw one of the laps. We try to avoid the first and the last one and we try to pick
             // the lap with the most dots.
@@ -390,14 +400,18 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             int maxDots = -1;
             for (int i = 0, n = td.Laps.Count; i < n; i++) {
                 // remap [0..n-3..n-2..n-1] to [1..n-2..0..n-1], that is we start at the second track
-                // and we do process the first track just before the last one.
+                // and we do process the first track just before the last one. We only use the last one
+                // if there's really only one lap.
                 int j = i + 1;
                 if (j == n - 1) j = 0;
-                else if (j == n) j = n - 1;
+                else if (j == n) {
+                    if (n == 1) j = n - 1;
+                    else break;
+                }
 
                 TrackParser.Lap l = td.Laps[j];
                 int nd = l.Dots.Count;
-                if (nd > n) {
+                if (nd > maxDots) {
                     currLap = l;
                     maxDots = nd;
                 }
@@ -415,24 +429,32 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 using (Brush bgColor = new SolidBrush(Color.Gray),
                              trackColor = new SolidBrush(Color.Yellow)) {
                     using (Pen trackPen = new Pen(trackColor, kTrackWidth)) {
- 
+
                         g.FillRectangle(bgColor, 0, 0, w, h);
 
                         List<TrackParser.Dot> dots = currLap.Dots;
                         TrackParser.Dot d = dots[0];
-                        PointF last = new PointF();
-                        PointF next = new PointF();
+                        CPointF last = new CPointF();
+                        CPointF next = new CPointF();
 
                         transformGpsCoord(d.mLongtiude, d.mLatitude, trackProj, last);
+
+                        float px = (float) trackProj.mPixelOffsetX;
+                        float py = (float) trackProj.mPixelOffsetY;
+
+                        last.mX -= px;
+                        last.mY -= py;
 
                         for (int i = 1, n = dots.Count; i <= n; i++) {
                             d = dots[i == n ? 0 : i];
                             transformGpsCoord(d.mLongtiude, d.mLatitude, trackProj, next);
+                            next.mX -= px;
+                            next.mY -= py;
 
-                            g.DrawLine(trackPen, last, next);
+                            g.DrawLine(trackPen, last.mX, last.mY, next.mX, next.mY);
 
-                            last.X = next.X;
-                            last.Y = next.Y;
+                            last.mX = next.mX;
+                            last.mY = next.mY;
                         }
                     }
                 }
@@ -441,15 +463,20 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             return bmp;
         }
 
-        private void drawTrackPos(Graphics g, Rectangle trackRect, Bitmap trackBmp, double currGpsLong, double currGpsLat) {
+        private void drawTrackPos(Graphics g, Brush posColor,
+            Rectangle trackRect, Bitmap trackBmp,
+            Gps2PixelProjection trackProj,
+            double longitude, double latitude) {
 
-            Color backColor = trackBmp.GetPixel(0, 0);
-            trackBmp.MakeTransparent(backColor);
+            if (trackProj == null) return;
 
             g.DrawImageUnscaled(trackBmp, trackRect);
 
+            transformGpsCoord(longitude, latitude, trackProj, mTempPointF);
 
-            TODO continue here
+            g.FillEllipse(posColor,
+                mTempPointF.mX - kTrackPosRadius, mTempPointF.mY - kTrackPosRadius,
+                kTrackPosRadius * 2, kTrackPosRadius * 2);
         }
 
 
@@ -470,7 +497,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             int ty = y;                     // text starts at top of tsy
             int yl = h / 2 / 3;             // 3 lines use the upper half of tsy
 
-            Font f = new Font(FontFamily.GenericSansSerif, (float)(yl * 0.4));
+            Font f = new Font(FontFamily.GenericSansSerif, (float)(yl * 0.4), FontStyle.Bold);
             int fh = f.Height / 2;
 
             int k = 0;
@@ -487,47 +514,50 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             return f;
         }
 
-        private void drawText(Graphics g, Brush textColor, Font textFont, PointF[] textPos,
+        private void drawText(Graphics g, Brush textColor,
+            Font labelFont, Font numFont,
+            PointF[] textPos,
             double speed, double accel, double latAccel,
             double time, double lapTime, int lapNum, double lastLap) {
 
             int k = 0;
 
             //--
-            g.DrawString("Speed", textFont, textColor, textPos[k++]);
+            g.DrawString("Speed", labelFont, textColor, textPos[k++]);
 
             string s = String.Format("{0,3:f0} mph", ms2mph(speed));
-            g.DrawString(s, textFont, textColor, textPos[k++]);
+            g.DrawString(s, numFont, textColor, textPos[k++]);
 
             //--
-            g.DrawString("Time", textFont, textColor, textPos[k++]);
+            g.DrawString("Time", labelFont, textColor, textPos[k++]);
 
             s = formatTime(time);
-            g.DrawString(s, textFont, textColor, textPos[k++]);
+            g.DrawString(s, numFont, textColor, textPos[k++]);
 
             //--
-            g.DrawString("Accel", textFont, textColor, textPos[k++]);
+            g.DrawString("Accel", labelFont, textColor, textPos[k++]);
 
             s = String.Format("{0,6:f3} g", accel);
-            g.DrawString(s, textFont, textColor, textPos[k++]);
+            g.DrawString(s, numFont, textColor, textPos[k++]);
 
             //--
-            g.DrawString("Lap", textFont, textColor, textPos[k++]);
+            s = String.Format("Lap {0}", lapNum + 1);
+            g.DrawString(s, labelFont, textColor, textPos[k++]);
 
-            s = formatTime(lapTime) + String.Format(" (#{0})", lapNum);
-            g.DrawString(s, textFont, textColor, textPos[k++]);
+            s = formatTime(lapTime);
+            g.DrawString(s, numFont, textColor, textPos[k++]);
 
             //--
-            g.DrawString("Lat", textFont, textColor, textPos[k++]);
+            g.DrawString("Lat", labelFont, textColor, textPos[k++]);
 
             s = String.Format("{0,6:f3} g", latAccel);
-            g.DrawString(s, textFont, textColor, textPos[k++]);
+            g.DrawString(s, numFont, textColor, textPos[k++]);
 
             //--
-            g.DrawString("Last", textFont, textColor, textPos[k++]);
+            g.DrawString("Last", labelFont, textColor, textPos[k++]);
 
             s = lastLap < 0 ? "--" : formatTime(lastLap);
-            g.DrawString(s, textFont, textColor, textPos[k++]);
+            g.DrawString(s, numFont, textColor, textPos[k++]);
         }
 
         private string formatTime(double time) {

@@ -174,7 +174,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
             d.mLongtiude = Convert.ToDouble(v[0]);
             d.mLatitude  = Convert.ToDouble(v[1]);
-            d.mAccel     = ft2m(Convert.ToDouble(v[2]));
+            d.mAltitude  = ft2m(Convert.ToDouble(v[2]));
         }
 
         /// <summary>
