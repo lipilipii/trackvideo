@@ -85,6 +85,25 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             TotalTime = startTime;
         }
 
+        /// <summary>
+        /// Returns a text summary of this track data: number of laps, points, etc.
+        /// </summary>
+        public string Summary {
+            get {
+                int n = 0;
+                foreach (Lap l in Laps) {
+                    n += l.Dots.Count;
+                }
+
+                return String.Format("Loaded {1} points for {0} laps, {2}:{3,2}.{4}",
+                    Laps.Count,
+                    n,
+                    (int)(TotalTime / 60),                      // minutes
+                    (int)(TotalTime % 60),                      // seconds
+                    100 * (int)(TotalTime - (int)TotalTime));   // centiseconds
+            }
+        }
+
         private Lap parseLap(XmlDocument doc, double startTime, int n) {
 
             try {
