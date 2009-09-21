@@ -42,6 +42,7 @@ using Alfray.LibUtils2.Misc;
 
 using Ionic.Zip;
 using ReneNyffenegger;
+using System.Threading;
 
 namespace Alfray.TrackVideo.TrackVideoApp {
     public partial class MainForm : Form, ILog {
@@ -51,6 +52,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private bool mIsFirstFormActivated = true;
         private bool mRequestUserStop = false;
         private Generator mGenerator;
+        private TrackParser mTrackData;
+
+        private delegate void reloadTrackData();
 
         private class ListBoxDoubleBuffer : ListBox {
             public ListBoxDoubleBuffer() : base() {
@@ -106,7 +110,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         public void ReloadPrefs() {
             reloadPrefs();
         }
-
 
         private void init() {
 
@@ -198,7 +201,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private void reloadPrefs() {
             updateButtons();
 
-            Log("Prefs reloaded");
+            //--Log("Prefs reloaded");
         }
 
         private void createDebugWindow(bool visible) {
@@ -246,15 +249,32 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         private void updateButtons() {
+
+            mButtonReloadTrack.Enabled = File.Exists(mEditTrackFilename.Text);
+
             mButtonGenerate.Text = (mGenerator == null) ? "Start" : "Stop";
-            mButtonGenerate.Enabled = File.Exists(mEditTrackFilename.Text) &&
+            mButtonGenerate.Enabled = mTrackData != null &&
                                       mEditDestFilename.Text != "";
+            mProgressBar.Enabled = mButtonGenerate.Enabled;
         }
 
+        /// <summary>
+        /// Actions to perform the first time the form is activated,
+        /// i.e. it has been created and has been made visible for the first time.
+        /// We load settings and do some time-consuming inits that require some
+        /// user feedback.
+        /// </summary>
         private void onFormActivated() {
             if (mIsFirstFormActivated) {
                 mIsFirstFormActivated = false;
                 loadSettings();
+                updateButtons();
+
+                mLabelTrackDataLoadResults.Text = "Loading initial track data, please wait.";
+                new Thread(delegate() {
+                    Thread.Sleep(100 /*ms*/);
+                    MainModule.MainForm.BeginInvoke(new reloadTrackData(onReloadTrack));
+                }).Start();
             }
         }
 
@@ -267,9 +287,15 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             if (fd.ShowDialog() == DialogResult.OK) {
                 if (File.Exists(fd.FileName)) {
                     mEditTrackFilename.Text = fd.FileName;
+                    onReloadTrack();
                 }
             }
 
+            updateButtons();
+        }
+
+        private void onReloadTrack() {
+            parseKmxOrKmz(mEditTrackFilename.Text);
             updateButtons();
         }
 
@@ -304,7 +330,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             }
 
             mStatusBar.Text = "Parsing KML...";
-            TrackParser trackData = parseKmxOrKmz(mEditTrackFilename.Text);
+            TrackParser trackData = mTrackData;
 
             mGenerator = new Generator(
                     Convert.ToInt32(mEditFps.Text),
@@ -350,32 +376,50 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             return mRequestUserStop;
         }
 
-        private TrackParser parseKmxOrKmz(string kmxPath) {
-            XmlDocument doc = new XmlDocument();
+        /// <summary>
+        /// Loads the given KMZ or KMX and store it in mTrackData.
+        /// </summary>
+        private void parseKmxOrKmz(string kmxPath) {
+            mTrackData = null;
 
-            if (ZipFile.IsZipFile(kmxPath)) {
-                using (ZipFile zf = ZipFile.Read(kmxPath)) {
-                    foreach (ZipEntry ze in zf) {
-                        // We take the first name that ends with .kmx
-                        if (ze.FileName.EndsWith(".kml")) {
-                            mStatusBar.Text = "Parsing " + ze.FileName;
+            try {
+                XmlDocument doc = new XmlDocument();
 
-                            MemoryStream ms = new MemoryStream();
-                            ze.Extract(ms);
-                            ms.Seek(0, SeekOrigin.Begin);
+                if (ZipFile.IsZipFile(kmxPath)) {
+                    using (ZipFile zf = ZipFile.Read(kmxPath)) {
+                        foreach (ZipEntry ze in zf) {
+                            // We take the first name that ends with .kmx
+                            if (ze.FileName.EndsWith(".kml")) {
+                                mLabelTrackDataLoadResults.Text = "Parsing " + ze.FileName;
+                                Application.DoEvents();
 
-                			doc.Load(ms);
-                			return new TrackParser(doc);
+                                MemoryStream ms = new MemoryStream();
+                                ze.Extract(ms);
+                                ms.Seek(0, SeekOrigin.Begin);
+
+                                doc.Load(ms);
+                                mTrackData = new TrackParser(doc);
+                            }
                         }
                     }
+                } else {
+                    // Read the kml file directly
+                    mLabelTrackDataLoadResults.Text = "Parsing " + Path.GetFileName(kmxPath);
+                    Application.DoEvents();
+
+                    doc.Load(kmxPath);
+                    mTrackData = new TrackParser(doc);
                 }
-            } else {
-                // Read the kml file directly
-                doc.Load(kmxPath);
-                return new TrackParser(doc);
+
+                mLabelTrackDataLoadResults.Text = mTrackData.Summary;
+            } catch (FileNotFoundException) {
+                mLabelTrackDataLoadResults.Text = "File not found";
+            } catch (Exception e) {
+                mLabelTrackDataLoadResults.Text = "Error: " + e.Message;
+                Log("Failed to load " + kmxPath + ": " + e.Message + "\n" + e.StackTrace);
             }
 
-            return null;
+            mStatusBar.Text = null;
         }
     }
 }
