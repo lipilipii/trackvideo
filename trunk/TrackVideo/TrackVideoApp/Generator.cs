@@ -155,28 +155,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     using (Font labelFont = prepareText(bgRect, out textPos),
                                 numFont = new Font(FontFamily.GenericMonospace, labelFont.Size, FontStyle.Bold)) {
 
-                        double currSpeed = 0,
-                               currAccel = 0,
-                               currLatAccel = 0,
-                               currGpsLat = 0,
-                               currGpsLong = 0,
-                               currTime = 0,
-                               currLapTime = 0,
-                               currLastLap = -1;    // no "last lap" time at first
-                        int currLapNum = 0;
-
-                        TrackParser.Lap lap = null;
-                        int maxLapNum = td.Laps.Count;
-                        double nextLapFrame = 0;
-                        double startLapFrame = 0;
-
-                        TrackParser.Dot currDot = null;
-                        TrackParser.Dot nextDot = null;
-                        int dotIndex = 0;
-                        int maxDotIndex = 0;
-                        double startDotFrame = 0;
-                        double nextDotFrame = 0;
-                        double deltaDotFrame = 0;
+                        Interpolator interp = new Interpolator(td);
 
                         double invFps = 1 / (double)fps;
 
@@ -186,57 +165,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                              frame < nbFrames && !userStopRequested;
                              frame++, updateFps++) {
 
-                            // keep track of current lap
-                            if (frame >= nextLapFrame && currLapNum < maxLapNum) {
-                                if (lap != null) {
-                                    currLapTime = lap.LapTime;
-                                    currLapNum++;
-                                }
-                                lap = td.Laps[currLapNum];
-                                startLapFrame = frame;
-                                dotIndex = 0;
-                                maxDotIndex = lap.Dots.Count;
-                                nextDotFrame = startLapFrame;
-                                if (currLapNum < maxLapNum) {
-                                    // get the absolute next start time (to avoid precision errors)
-                                    nextLapFrame = td.Laps[currLapNum + 1].StartTime * fps;
-                                } else {
-                                    // no more lap after
-                                    nextLapFrame = nbFrames + 1;
-                                }
-                            }
+                            double currTime = (double)frame * invFps;
 
-                            currTime = (double)frame * invFps;
-                            currLapTime = (double)(frame - startLapFrame) * invFps;
+                            TrackParser.Sample currSample = interp.GoTo(currTime);
 
-                            if (frame >= nextDotFrame && dotIndex < maxDotIndex) {
-                                currDot = lap.Dots[dotIndex++];
-                                startDotFrame = frame;
+                            double currLapTime = interp.CurrLapTime;
 
-                                if (dotIndex < maxDotIndex) {
-                                    nextDot = lap.Dots[dotIndex];
-                                    nextDotFrame = startLapFrame + nextDot.mElapsedTime * fps;
-                                } else {
-                                    // no more dot for this lap
-                                    nextDot = currDot;
-                                    nextDotFrame = nextLapFrame;
-                                }
-
-                                deltaDotFrame = 1 / (nextDotFrame - startDotFrame);
-                            }
-
-                            // compute the "progress" inside this dot and interpolate values
-                            double progress = 0;
-                            if (currDot != nextDot && nextDotFrame > startDotFrame) {
-                                progress = (frame - startDotFrame) * deltaDotFrame;
-                            }
-
-                            currSpeed = interpolate(currDot.mSpeed, nextDot.mSpeed, progress);
-                            currAccel = interpolate(currDot.mAccel, nextDot.mAccel, progress);
-                            currLatAccel = interpolate(currDot.mLateralAccel, nextDot.mLateralAccel, progress);
-                            currGpsLat = interpolate(currDot.mLatitude, nextDot.mLatitude, progress);
-                            currGpsLong = interpolate(currDot.mLongtiude, nextDot.mLongtiude, progress);
-                               
                             // keep track of current dot & interpolate between dots
 
                             // draw background
@@ -246,7 +180,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                             g.FillRectangle(bgColor, bgRect);
 
                             // draw track + current pos
-                            drawTrackPos(g, posColor, trackRect, trackBmp, trackProj, currGpsLong, currGpsLat);
+                            drawTrackPos(g, posColor, trackRect, trackBmp, trackProj,
+                                currSample.mLongtiude, currSample.mLatitude);
 
                             // draw bearing
 
@@ -254,8 +189,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
                             // draw text
                             drawText(g, textColor, labelFont, numFont, textPos,
-                                currSpeed, currAccel, currLatAccel, currTime,
-                                currLapTime, currLapNum, currLastLap);
+                                currSample.mSpeed, currSample.mAccel, currSample.mLateralAccel,
+                                currTime,
+                                currLapTime, interp.CurrLapIndex, interp.LastLapDuration);
 
                             // finally dump frame and update preview/progress
                             MainModule.MainForm.Invoke(mAddFrame);
@@ -326,7 +262,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         private Gps2PixelProjection prepareTrackProj(Rectangle rect, TrackParser td, out Rectangle trackRect) {
             // we need at least one point to do something
-            if (td.Laps.Count == 0 || td.Laps[0].Dots.Count == 0) {
+            if (!td.HasSamples) {
                 trackRect = Rectangle.Empty;
                 return null;
             }
@@ -336,13 +272,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                    minLat  = Double.PositiveInfinity,
                    maxLat  = Double.NegativeInfinity;
 
-            foreach (TrackParser.Lap l in td.Laps) {
-                foreach (TrackParser.Dot d in l.Dots) {
-                    minLong = Math.Min(minLong, d.mLongtiude);
-                    maxLong = Math.Max(maxLong, d.mLongtiude);
-                    minLat  = Math.Min(minLat , d.mLatitude);
-                    maxLat  = Math.Max(maxLat , d.mLatitude);
-                }
+            foreach (TrackParser.Sample d in td.Samples) {
+                minLong = Math.Min(minLong, d.mLongtiude);
+                maxLong = Math.Max(maxLong, d.mLongtiude);
+                minLat  = Math.Min(minLat , d.mLatitude);
+                maxLat  = Math.Max(maxLat , d.mLatitude);
             }
 
             // we want to map the min..maxLong(+X)..Lat(-Y) to the given rect
@@ -392,34 +326,10 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         private Bitmap prepareTrackBmp(Rectangle trackRect, Gps2PixelProjection trackProj, TrackParser td) {
             // We need at least a lap to draw something
-            if (td.Laps.Count == 0 || trackProj == null) return null;
+            if (!td.HasSamples || trackProj == null) return null;
 
-            // We'll draw one of the laps. We try to avoid the first and the last one and we try to pick
-            // the lap with the most dots.
-            TrackParser.Lap currLap = null;
-            int maxDots = -1;
-            for (int i = 0, n = td.Laps.Count; i < n; i++) {
-                // remap [0..n-3..n-2..n-1] to [1..n-2..0..n-1], that is we start at the second track
-                // and we do process the first track just before the last one. We only use the last one
-                // if there's really only one lap.
-                int j = i + 1;
-                if (j == n - 1) j = 0;
-                else if (j == n) {
-                    if (n == 1) j = n - 1;
-                    else break;
-                }
-
-                TrackParser.Lap l = td.Laps[j];
-                int nd = l.Dots.Count;
-                if (nd > maxDots) {
-                    currLap = l;
-                    maxDots = nd;
-                }
-            }
-
-            // We should have a lap now. But it should also have more than one point to be useful.
-            System.Diagnostics.Debug.Assert(currLap != null);
-            if (currLap == null && maxDots > 1) return null;
+            // We'll draw one of the laps. Just get the first lap.
+            TrackParser.Lap currLap = td.Laps[0];
 
             int w = trackRect.Width;
             int h = trackRect.Height;
@@ -432,12 +342,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
                         g.FillRectangle(bgColor, 0, 0, w, h);
 
-                        List<TrackParser.Dot> dots = currLap.Dots;
-                        TrackParser.Dot d = dots[0];
+                        List<TrackParser.Sample> samples = td.Samples;
+                        TrackParser.Sample s = samples[0];
                         CPointF last = new CPointF();
                         CPointF next = new CPointF();
 
-                        transformGpsCoord(d.mLongtiude, d.mLatitude, trackProj, last);
+                        transformGpsCoord(s.mLongtiude, s.mLatitude, trackProj, last);
 
                         float px = (float) trackProj.mPixelOffsetX;
                         float py = (float) trackProj.mPixelOffsetY;
@@ -445,9 +355,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                         last.mX -= px;
                         last.mY -= py;
 
-                        for (int i = 1, n = dots.Count; i <= n; i++) {
-                            d = dots[i == n ? 0 : i];
-                            transformGpsCoord(d.mLongtiude, d.mLatitude, trackProj, next);
+                        for (int i = 1, n = samples.Count; i < n; i++) {
+                            s = samples[i];
+                            if (s.mLap != currLap) continue;
+
+                            transformGpsCoord(s.mLongtiude, s.mLatitude, trackProj, next);
                             next.mX -= px;
                             next.mY -= py;
 
@@ -491,7 +403,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             int h = rect.Height;
 
             int tx = x + w * 2 / 5;         // beginning of text in tsx
-            int xh = w * 3 / 5 / 2;     // width of the two half columns
+            int xh = w * 3 / 5 / 2;         // width of the two half columns
             int xl = xh * 1 / 3;            // label is 1/3 of each column
 
             int ty = y;                     // text starts at top of tsy

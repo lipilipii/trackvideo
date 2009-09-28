@@ -37,52 +37,124 @@ using System.Text.RegularExpressions;
 
 
 namespace Alfray.TrackVideo.TrackVideoApp {
+
+    /// <summary>
+    /// Information loaded from a track data file.
+    /// A track parser contains track data, organized in laps.
+    /// Each lap contains a number of sample.
+    /// 
+    /// Conventions:
+    /// - AbsStartTime: an absolute time relative to the very first sample of the first lap.
+    /// - LapDuration: the duration of a given lap (what is commonly called "a lap time").
+    /// - ElapstedTime: the time of a sample relative to the start of its lap.
+    /// </summary>
     public class TrackParser {
 
-        public class Dot {
+        /// <summary>
+        /// A sample of track parameters at a given time in a lap.
+        /// </summary>
+        public class Sample {
+            /// <summary>
+            /// The lap that contains this sample.
+            /// </summary>
+            public Lap mLap;
+
+            /// <summary>
+            /// The absolute start time of the sample (relative to the start of the first lap)
+            /// </summary>
+            public double mAbsStartTime;
+
+            /// <summary>
+            /// The absolute start time of the <em>next</em> sample.
+            /// It's NaN for the last sample of the last lap.
+            /// </summary>
+            public double mAbsEndTime = Double.NaN;
+
+            /// <summary>
+            /// The time of the sample relative to the start of this lap.
+            /// </summary>
             public double mElapsedTime;
+
             public double mLatitude;
             public double mLongtiude;
+
+            /// <summary>
+            /// Altitude in meters
+            /// </summary>
             public double mAltitude;
+
             public double mBearing;
+
+            /// <summary>
+            /// Acceleration in g
+            /// </summary>
             public double mAccel;
+
+            /// <summary>
+            /// Lateral acceleration in g
+            /// </summary>
             public double mLateralAccel;
+
+            /// <summary>
+            /// Speed in m/s
+            /// </summary>
             public double mSpeed;
         }
 
+        /// <summary>
+        /// Information on a given lap.
+        /// </summary>
         public class Lap {
-            public int Index { get; private set; }
-            public double StartTime { get; private set; }
-            public double LapTime { get; private set; }
-            public List<Dot> Dots { get; private set; }
+            /// <summary>
+            /// The lap number. First lap starts at 1.
+            /// </summary>
+            public int mIndex;
 
-            public Lap(int index, double startTime) {
-                Index = index;
-                StartTime = startTime;
-                Dots = new List<Dot>();
-            }
+            /// <summary>
+            /// The absolute start time of the lap (absolute to the first dot of the first lap)
+            /// </summary>
+            public double mAbsStartTime;
 
-            public void addDot(Dot d) {
-                Dots.Add(d);
-                LapTime = d.mElapsedTime;
+            /// <summary>
+            /// The duration of this lap.
+            /// </summary>
+            public double mLapTime;
+        }
+
+        /// <summary>
+        /// All the samples, for all the laps, in increasing time order.
+        /// </summary>
+        public List<Sample> Samples { get; private set; }
+
+        /// <summary>
+        /// Returns true if this track data has at least one sample.
+        /// </summary>
+        public bool HasSamples {
+            get {
+                return Samples.Count > 0;
             }
         }
 
+        /// <summary>
+        /// All the laps, in increasing number/time order.
+        /// </summary>
         public List<Lap> Laps   { get; private set; }
+
+        /// <summary>
+        /// Total time of all the laps, e.g. simply the absolute start time
+        /// of the last sample of the last lap.
+        /// </summary>
         public double TotalTime { get; private set; }
+
 
         public TrackParser(XmlDocument doc) {
 
-            Laps = new List<Lap>(); 
+            Samples = new List<Sample>();
+            Laps = new List<Lap>();
 
-            double startTime = 0;
-            Lap l = null;
-            int n = 1;
-            while ((l = parseLap(doc, startTime, n++)) != null) {
-                startTime += l.LapTime;
-            }
+            parseLaps(doc);
 
-            TotalTime = startTime;
+            if (Samples.Count > 0) TotalTime = Samples[Samples.Count - 1].mAbsStartTime;
         }
 
         /// <summary>
@@ -90,59 +162,81 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         /// </summary>
         public string Summary {
             get {
-                int n = 0;
-                foreach (Lap l in Laps) {
-                    n += l.Dots.Count;
-                }
-
                 return String.Format("Loaded {1} points for {0} laps, {2}:{3,2}.{4}",
                     Laps.Count,
-                    n,
+                    Samples.Count,
                     (int)(TotalTime / 60),                      // minutes
                     (int)(TotalTime % 60),                      // seconds
                     100 * (int)(TotalTime - (int)TotalTime));   // centiseconds
             }
         }
 
-        private Lap parseLap(XmlDocument doc, double startTime, int n) {
+        private void parseLaps(XmlDocument doc) {
 
             try {
                 XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
                 ns.AddNamespace("k", @"http://www.opengis.net/kml/2.2");
 
-                string expr = String.Format("/k:kml/k:Document/k:Folder/k:Folder[k:styleUrl='#lap' and k:name='{0}']/k:Placemark", n);
-                XmlNodeList nodes = doc.SelectNodes(expr, ns);
+                double startTime = 0;
+                double lapTime = 0;
+                Sample prevSample = null;
+                string prevTimeString = null;
 
-                if (nodes != null && nodes.Count > 0) {
+                for (int n = 1; ; n++) {
 
-                    Lap l = new Lap(n, startTime);
+                    string expr = String.Format("/k:kml/k:Document/k:Folder/k:Folder[k:styleUrl='#lap' and k:name='{0}']/k:Placemark", n);
+                    XmlNodeList nodes = doc.SelectNodes(expr, ns);
+
+                    if (nodes == null || nodes.Count == 0) {
+                        break;
+                    }
+
+                    Lap l = new Lap();
+                    l.mIndex = n;
+                    l.mAbsStartTime = startTime;
+                    Laps.Add(l);
 
                     foreach (XmlNode node in nodes) {
                         XmlNode descNode = node.SelectSingleNode("k:description", ns);
                         XmlNode coordNode = node.SelectSingleNode("k:Point/k:coordinates", ns);
 
                         if (descNode != null && coordNode != null) {
-                            Dot d = new Dot();
-                            parseDesc(d, descNode);
-                            parseCoords(d, coordNode);
+                            Sample s = new Sample();
+                            string timeString = parseDesc(s, descNode);
+                            parseCoords(s, coordNode);
 
-                            l.addDot(d);
+                            // If the ISO time code is the same as the one of the last sample
+                            // then discard the sample as a dup. With TrackMaster data this
+                            // happens for the first sample of each lap.
+                            if (prevTimeString != null && prevTimeString == timeString) continue;
+                            prevTimeString = timeString;
+
+                            Samples.Add(s);
+
+                            double elapsed = s.mElapsedTime;
+                            s.mAbsStartTime = startTime + elapsed;
+                            lapTime = elapsed;
+                            if (prevSample != null) {
+                                prevSample.mAbsEndTime = s.mAbsStartTime;
+                            }
+                            prevSample = s;
+
                         }
-                    }
+                    } // foreach sample
 
-                    Laps.Add(l);
-                    return l;
+                    l.mLapTime = lapTime;
+                    startTime += lapTime;
                 }
+
+                TotalTime = startTime;
 
             } catch (XPathException e) {
                 // TODO use debug log
                 System.Diagnostics.Debug.Print(e.Message + "\n" + e.StackTrace + "\n");
             }
-
-            return null;
         }
 
-        private void parseDesc(Dot d, XmlNode descNode) {
+        private string parseDesc(Sample s, XmlNode descNode) {
             System.Diagnostics.Debug.Assert(descNode != null);
 
             string t = descNode.InnerText.ToString().Trim();
@@ -150,50 +244,60 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             // Regexp:      ... <p> name        = value     </p> ...
             Regex r = new Regex(@">(?<1>[\w\s]+)=(?<2>[^<]+)<", RegexOptions.Singleline | RegexOptions.Compiled);
 
+            string timeCode = "";
+
             for (Match m = r.Match(t); m.Success; m = m.NextMatch()) {
                 string name  = m.Groups[1].Value;
                 string value = m.Groups[2].Value;
 
                 switch(name) {
+                    case "time":
+                        // This is an ISO time code with actually enough milliseconds to be interesting.
+                        // We have the same info in elapsed_time so we're not going to bother decoding
+                        // the ISO time string. However we want the value to quickly discard dups.
+                        timeCode = value;
+                        break;
                     case "accel":
-                        d.mAccel = Convert.ToDouble(value);
+                        s.mAccel = Convert.ToDouble(value);
                         break;
                     case "lateral_accel":
-                        d.mLateralAccel = Convert.ToDouble(value);
+                        s.mLateralAccel = Convert.ToDouble(value);
                         break;
                     case "bearing":
-                        d.mBearing = Convert.ToDouble(value);
+                        s.mBearing = Convert.ToDouble(value);
                         break;
                     case "speed":
                         int space = value.IndexOf(' ');
                         string num = space > 0 ? value.Substring(0, space) : value;
-                        d.mSpeed = Convert.ToDouble(num);
+                        s.mSpeed = Convert.ToDouble(num);
                         if (value.IndexOf("mph") > 0) {
-                            d.mSpeed = mph2ms(d.mSpeed);
+                            s.mSpeed = mph2ms(s.mSpeed);
                         } else if (value.IndexOf("kmh") > 0) {
-                            d.mSpeed = kmh2ms(d.mSpeed);
+                            s.mSpeed = kmh2ms(s.mSpeed);
                         }
                         break;
                     case "elapsed time":
                         int col = value.IndexOf(':');
                         string min = value.Substring(0, col);
                         string sec = value.Substring(col + 1);
-                        d.mElapsedTime = Convert.ToDouble(min) * 60 + Convert.ToDouble(sec);
+                        s.mElapsedTime = Convert.ToDouble(min) * 60 + Convert.ToDouble(sec);
                         break;
                 }
             }
+
+            return timeCode;
         }
 
-        private void parseCoords(Dot d, XmlNode coordNode) {
+        private void parseCoords(Sample s, XmlNode coordNode) {
             System.Diagnostics.Debug.Assert(coordNode != null);
 
             string t = coordNode.InnerText.ToString().Trim();
 
             string[] v = t.Split(',');
 
-            d.mLongtiude = Convert.ToDouble(v[0]);
-            d.mLatitude  = Convert.ToDouble(v[1]);
-            d.mAltitude  = ft2m(Convert.ToDouble(v[2]));
+            s.mLongtiude = Convert.ToDouble(v[0]);
+            s.mLatitude  = Convert.ToDouble(v[1]);
+            s.mAltitude  = ft2m(Convert.ToDouble(v[2]));
         }
 
         /// <summary>
