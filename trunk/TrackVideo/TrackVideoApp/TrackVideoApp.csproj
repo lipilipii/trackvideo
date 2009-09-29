@@ -128,8 +128,11 @@
     <Compile Include="PrefConstants.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PrefForm.cs">
+    <Compile Include="PreviewForm.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PreviewForm.Designer.cs">
+      <DependentUpon>PreviewForm.cs</DependentUpon>
     </Compile>
     <Compile Include="TrackParser.cs" />
     <EmbeddedResource Include="DebugForm.resx">
@@ -142,9 +145,8 @@
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PrefForm.resx">
-      <DependentUpon>PrefForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="PreviewForm.resx">
+      <DependentUpon>PreviewForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

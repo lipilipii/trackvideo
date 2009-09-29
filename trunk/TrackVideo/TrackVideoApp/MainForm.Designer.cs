@@ -38,7 +38,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         private System.Windows.Forms.MainMenu mMenuMain;
         private System.Windows.Forms.MenuItem menuItem1;
-        private System.Windows.Forms.MenuItem menuItem4;
         private System.Windows.Forms.MenuItem menuItem10;
         private System.Windows.Forms.StatusBar mStatusBar;
         private System.Windows.Forms.MenuItem mMenuItemConnect;
@@ -48,7 +47,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private System.Windows.Forms.MenuItem mMenuItemDebug;
         private System.Windows.Forms.MenuItem mMenuItemAbout;
         private System.Windows.Forms.MenuItem mMenuHelp;
-        private System.Windows.Forms.MenuItem mMenuItemPreferences;
         private System.Windows.Forms.MenuItem menuItem3;
 
         #region Windows Form Designer generated code
@@ -64,8 +62,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mMenuItemConnect = new System.Windows.Forms.MenuItem();
             this.mMenuItemDisconnect = new System.Windows.Forms.MenuItem();
             this.menuItem3 = new System.Windows.Forms.MenuItem();
-            this.mMenuItemPreferences = new System.Windows.Forms.MenuItem();
-            this.menuItem4 = new System.Windows.Forms.MenuItem();
             this.mMenuItemQuit = new System.Windows.Forms.MenuItem();
             this.mMenuHelp = new System.Windows.Forms.MenuItem();
             this.mMenuItemUpdate = new System.Windows.Forms.MenuItem();
@@ -93,16 +89,16 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mEditMovieSy = new System.Windows.Forms.TextBox();
             this.mEditMovieSx = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.mProgressBar = new System.Windows.Forms.ProgressBar();
+            this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.mPreviewPicture = new System.Windows.Forms.PictureBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.mButtonReloadTrack = new System.Windows.Forms.Button();
             this.mLabelTrackDataLoadResults = new System.Windows.Forms.Label();
-            this.radioButton1 = new System.Windows.Forms.RadioButton();
-            this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mPreviewPicture)).BeginInit();
@@ -123,8 +119,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mMenuItemConnect,
             this.mMenuItemDisconnect,
             this.menuItem3,
-            this.mMenuItemPreferences,
-            this.menuItem4,
             this.mMenuItemQuit});
             this.menuItem1.Text = "File";
             // 
@@ -143,20 +137,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.menuItem3.Index = 2;
             this.menuItem3.Text = "-";
             // 
-            // mMenuItemPreferences
-            // 
-            this.mMenuItemPreferences.Index = 3;
-            this.mMenuItemPreferences.Text = "Preferences...";
-            this.mMenuItemPreferences.Click += new System.EventHandler(this.mMenuItemPreferences_Click);
-            // 
-            // menuItem4
-            // 
-            this.menuItem4.Index = 4;
-            this.menuItem4.Text = "-";
-            // 
             // mMenuItemQuit
             // 
-            this.mMenuItemQuit.Index = 5;
+            this.mMenuItemQuit.Index = 3;
             this.mMenuItemQuit.Text = "Quit";
             this.mMenuItemQuit.Click += new System.EventHandler(this.mMenuItemQuit_Click);
             // 
@@ -403,6 +386,17 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Preview && Create Movie";
             // 
+            // radioButton2
+            // 
+            this.radioButton2.AutoSize = true;
+            this.radioButton2.Location = new System.Drawing.Point(9, 43);
+            this.radioButton2.Name = "radioButton2";
+            this.radioButton2.Size = new System.Drawing.Size(86, 17);
+            this.radioButton2.TabIndex = 9;
+            this.radioButton2.TabStop = true;
+            this.radioButton2.Text = "Also save to:";
+            this.radioButton2.UseVisualStyleBackColor = true;
+            // 
             // mProgressBar
             // 
             this.mProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
@@ -411,6 +405,17 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mProgressBar.Name = "mProgressBar";
             this.mProgressBar.Size = new System.Drawing.Size(445, 23);
             this.mProgressBar.TabIndex = 9;
+            // 
+            // radioButton1
+            // 
+            this.radioButton1.AutoSize = true;
+            this.radioButton1.Location = new System.Drawing.Point(9, 19);
+            this.radioButton1.Name = "radioButton1";
+            this.radioButton1.Size = new System.Drawing.Size(85, 17);
+            this.radioButton1.TabIndex = 8;
+            this.radioButton1.TabStop = true;
+            this.radioButton1.Text = "Preview only";
+            this.radioButton1.UseVisualStyleBackColor = true;
             // 
             // mPreviewPicture
             // 
@@ -459,28 +464,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mLabelTrackDataLoadResults.TabIndex = 4;
             this.mLabelTrackDataLoadResults.Text = "(placeholder for load results)";
             // 
-            // radioButton1
-            // 
-            this.radioButton1.AutoSize = true;
-            this.radioButton1.Location = new System.Drawing.Point(9, 19);
-            this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size(85, 17);
-            this.radioButton1.TabIndex = 8;
-            this.radioButton1.TabStop = true;
-            this.radioButton1.Text = "Preview only";
-            this.radioButton1.UseVisualStyleBackColor = true;
-            // 
-            // radioButton2
-            // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Location = new System.Drawing.Point(9, 43);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(86, 17);
-            this.radioButton2.TabIndex = 9;
-            this.radioButton2.TabStop = true;
-            this.radioButton2.Text = "Also save to:";
-            this.radioButton2.UseVisualStyleBackColor = true;
-            // 
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.button2);
@@ -492,15 +475,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Templates (TODO)";
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(7, 13);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "Load";
-            this.button1.UseVisualStyleBackColor = true;
-            // 
             // button2
             // 
             this.button2.Location = new System.Drawing.Point(6, 42);
@@ -509,6 +483,15 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.button2.TabIndex = 1;
             this.button2.Text = "Save";
             this.button2.UseVisualStyleBackColor = true;
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(7, 13);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 0;
+            this.button1.Text = "Load";
+            this.button1.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -583,10 +566,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         private void RMainForm_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             terminate();
-        }
-
-        private void mMenuItemPreferences_Click(object sender, System.EventArgs e) {
-            showHidePrefWindow();
         }
 
         private void MainForm_Activated(object sender, EventArgs e) {

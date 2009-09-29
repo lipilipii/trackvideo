@@ -47,7 +47,8 @@ namespace Alfray.TrackVideo.TrackVideoApp
 
 		public const string kMainForm = "forms-main";
 		public const string kPrefForm = "forms-pref";
-		public const string kDebugForm = "forms-debug";
+        public const string kDebugForm = "forms-debug";
+        public const string kPreviewForm = "forms-preview";
 
         public const string kLastKmxPath  = "last-kmx-path";
         public const string kLastDestPath = "last-dest-path";

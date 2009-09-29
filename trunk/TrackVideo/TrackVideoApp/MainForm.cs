@@ -48,7 +48,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
     public partial class MainForm : Form, ILog {
 
         private DebugForm mDebugForm;
-        private PrefForm mPrefForm;
+        private PreviewForm mPreviewForm;
         private bool mIsFirstFormActivated = true;
         private bool mRequestUserStop = false;
         private Generator mGenerator;
@@ -227,25 +227,25 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         }
 
         private void createPrefWindow(bool visible) {
-            if (mPrefForm == null) {
-                mPrefForm = new PrefForm();
-                mPrefForm.Show();
+            if (mPreviewForm == null) {
+                mPreviewForm = new PreviewForm();
+                mPreviewForm.Show();
             }
         }
 
         private void closePrefWindow() {
-            if (mPrefForm != null) {
-                mPrefForm.CanClose = true;
-                mPrefForm.Close();
-                mPrefForm = null;
+            if (mPreviewForm != null) {
+                mPreviewForm.CanClose = true;
+                mPreviewForm.Close();
+                mPreviewForm = null;
             }
         }
 
-        private void showHidePrefWindow() {
-            if (mPrefForm == null)
+        private void showPreviewWindow() {
+            if (mPreviewForm == null)
                 createPrefWindow(true);
             else
-                mPrefForm.Visible = !mPrefForm.Visible;
+                mPreviewForm.Visible = true;
         }
 
         private void updateButtons() {
@@ -328,6 +328,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     return;
                 }                    
             }
+
+
+            // TODO CONTINUE HERE... move this to a preview/render thread
+            // showPreviewWindow();
+            // return;
 
             mStatusBar.Text = "Parsing KML...";
             TrackParser trackData = mTrackData;
