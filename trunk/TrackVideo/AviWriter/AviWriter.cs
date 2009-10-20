@@ -91,10 +91,16 @@ namespace ReneNyffenegger {
             width_ = (UInt32)width;
             height_ = (UInt32)height;
             bmp_ = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+            bmp2_ = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+            bmp2r_ = new Rectangle(0, height - 1, width, -height);
+            bmp2g_ = Graphics.FromImage(bmp2_);
+
             BitmapData bmpDat = bmp_.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
             stride_ = (UInt32)bmpDat.Stride;
             bmp_.UnlockBits(bmpDat);
+
             AVIFileInit();
+
             int hr = AVIFileOpenW(ref pfile_, fileName, 4097 /* OF_WRITE | OF_CREATE (winbase.h) */, 0);
             if (hr != 0) {
                 throw new AviException("error for AVIFileOpenW");
@@ -108,23 +114,28 @@ namespace ReneNyffenegger {
 
         public void AddFrame() {
 
-            BitmapData bmpDat = bmp_.LockBits(
+            // Perform top-down inversion of bmp_ into bmp2_.
+            // GDI+ created a top-down BMP whereas AVI expects a bottom-up BMP.
+            bmp2g_.DrawImage(bmp_, bmp2r_);
+
+            BitmapData bmpDat = bmp2_.LockBits(
               new Rectangle(0, 0, (int)width_, (int)height_), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            try {
+                int hr = AVIStreamWrite(psCompressed_, count_, 1,
+                   bmpDat.Scan0, // pointer to data
+                   (Int32)(stride_ * height_),
+                   0, // 16 = AVIIF_KEYFRAME
+                   0, // plSampWritten
+                   0  // plBytesWritten
+                   );
 
-            int hr = AVIStreamWrite(psCompressed_, count_, 1,
-               bmpDat.Scan0, // pointer to data
-               (Int32)(stride_ * height_),
-               0, // 16 = AVIIF_KEYFRAMe
-               0,
-               0);
-
-            if (hr != 0) {
-                throw new AviException("AVIStreamWrite");
+                if (hr != 0) {
+                    throw new AviException("AVIStreamWrite");
+                }
+            } finally {
+                bmp2_.UnlockBits(bmpDat);
+                count_++;
             }
-
-            bmp_.UnlockBits(bmpDat);
-
-            count_++;
         }
 
         public void Close() {
@@ -135,6 +146,8 @@ namespace ReneNyffenegger {
             AVIFileExit();
 
             bmp_.Dispose();  // RM 20090912
+            bmp2_.Dispose(); // RM 20091019
+            bmp2g_.Dispose();
         }
 
         private void CreateStream() {
@@ -267,6 +280,9 @@ namespace ReneNyffenegger {
         private UInt32 fccHandler_ = 808810089;// IV50
         //1145656899;  // CVID
         private Bitmap bmp_;
+        private Bitmap bmp2_;  // RM 20091019 for inverting the image
+        private Rectangle bmp2r_;
+        private Graphics bmp2g_;
 
         #region IDisposable Members
         // RM 20090911 Added IDisposable support for C# using{} statement
