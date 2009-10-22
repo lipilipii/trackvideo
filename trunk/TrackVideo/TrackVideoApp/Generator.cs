@@ -28,7 +28,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private int mMovieSy;
         private int mTrackSx;
         private int mTrackSy;
-        private Size mPreviewSize;
         private TrackParser mTrackData;
         private string mDestFilename;
 
@@ -46,7 +45,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         public OnGeneratorUpdate mOnUpdateCallback;
 
         private delegate void AddFrame();
-        private AddFrame mAddFrame;
+        private AddFrame mAddFrameFunc;
 
         private CPointF mTempPointF = new CPointF();
 
@@ -69,12 +68,22 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             public float mY;
         }
 
+        /// <summary>
+        /// Creates a new generator.
+        /// Note that for a preview you just use destFilename=null.
+        /// </summary>
+        /// <param name="fps">The desired frames per second, e.g. 30</param>
+        /// <param name="movieSx">Movie container width in pixels</param>
+        /// <param name="movieSy">Movie container height in pixels</param>
+        /// <param name="trackSx">Track rendering width in pixels</param>
+        /// <param name="trackSy">Track rendering height in pixels</param>
+        /// <param name="trackData">Track data</param>
+        /// <param name="destFilename">AVI destination filename. Null for a preview.</param>
         public Generator(int fps,
                         int movieSx,
                         int movieSy,
                         int trackSx,
                         int trackSy,
-                        Size previewSize,
                         TrackParser trackData,
                         string destFilename) {
             mFps = fps;
@@ -82,23 +91,26 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             mMovieSy = movieSy;
             mTrackSx = trackSx;
             mTrackSy = trackSy;
-            mPreviewSize = previewSize;
             mTrackData    = trackData;
             mDestFilename = destFilename;
         }
 
         /// <summary>
-        /// Starts rendering in a thread. Each Start() call *must* be balanced
+        /// Starts rendering in a thread. Each StartAsync() call *must* be balanced
         /// by a Dispose() call or bad things will happen.
         /// </summary>
-        public void Start() {
+        public void StartAsync() {
             System.Diagnostics.Debug.Assert(mAviWriter == null);
             System.Diagnostics.Debug.Assert(mThread == null);
             if (mThread != null) return;  // for sanity
 
-            mAddFrame = doAddFrame;
-            mAviWriter = new AviWriter();
-            mAviBmp = mAviWriter.Open(mDestFilename, (uint)mFps, mMovieSx, mMovieSy);
+            mAddFrameFunc = doAddFrame;
+            if (mDestFilename != null) {
+                mAviWriter = new AviWriter();
+                mAviBmp = mAviWriter.Open(mDestFilename, (uint)mFps, mMovieSx, mMovieSy);
+            } else {
+                mAviBmp = new Bitmap(mMovieSx, mMovieSy);
+            }
 
             mThreadMustStop = false;
 
@@ -194,14 +206,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                                 currLapTime, interp.CurrLapIndex, interp.LastLapDuration);
 
                             // finally dump frame and update preview/progress
-                            MainModule.MainForm.Invoke(mAddFrame);
+                            MainModule.MainForm.Invoke(mAddFrameFunc);
 
                             if (updateFps == fps) updateFps = 0;
-                            if (updateFps == 0 && mPreviewSize != null) {
+                            if (updateFps == 0) {
                                 // Update status, progress, etc.
-                                userStopRequested = syncUpdate(frame,
-                                    nbFrames,
-                                    new Bitmap(mAviBmp, mPreviewSize));
+                                userStopRequested = syncUpdate(frame, nbFrames, new Bitmap(mAviBmp));
                             }
 
                             if (mThreadMustStop) break;
@@ -211,7 +221,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     // Make sure to tell owner that the generator is done
                     // This one must be async -- this thread will quit and the owner will
                     // try to join to wait for the thread to finish.
-                    asyncUpdate(nbFrames, nbFrames, new Bitmap(mAviBmp, mPreviewSize));
+                    asyncUpdate(nbFrames, nbFrames, new Bitmap(mAviBmp));
                 } // using Brush
             } // using Graphics
         }
@@ -225,7 +235,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
         // this is invoked in the main UI thread from the main loop
         private void doAddFrame() {
-            mAviWriter.AddFrame();
+            if (mAviWriter != null) mAviWriter.AddFrame();
         }
 
         /// <summary>
@@ -494,6 +504,5 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private double ms2kmh(double ms) {
             return ms / 0.277777778;
         }
-
     }
 }

@@ -92,7 +92,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mRadioRender = new System.Windows.Forms.RadioButton();
             this.mProgressBar = new System.Windows.Forms.ProgressBar();
             this.mRadioPreview = new System.Windows.Forms.RadioButton();
-            this.mPreviewPicture = new System.Windows.Forms.PictureBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.mButtonReloadTrack = new System.Windows.Forms.Button();
             this.mLabelTrackDataLoadResults = new System.Windows.Forms.Label();
@@ -101,7 +100,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.button1 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.mPreviewPicture)).BeginInit();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.SuspendLayout();
@@ -417,16 +415,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mRadioPreview.Text = "Preview only";
             this.mRadioPreview.UseVisualStyleBackColor = true;
             // 
-            // mPreviewPicture
-            // 
-            this.mPreviewPicture.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.mPreviewPicture.Location = new System.Drawing.Point(251, 204);
-            this.mPreviewPicture.Name = "mPreviewPicture";
-            this.mPreviewPicture.Size = new System.Drawing.Size(302, 189);
-            this.mPreviewPicture.TabIndex = 8;
-            this.mPreviewPicture.TabStop = false;
-            // 
             // groupBox3
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
@@ -498,7 +486,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
             this.ClientSize = new System.Drawing.Size(565, 427);
             this.Controls.Add(this.groupBox4);
-            this.Controls.Add(this.mPreviewPicture);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -513,7 +500,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.mPreviewPicture)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
@@ -540,7 +526,6 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private TextBox mEditMovieSx;
         private GroupBox groupBox2;
         private ProgressBar mProgressBar;
-        private PictureBox mPreviewPicture;
         private Label label7;
         private Label label8;
         private TextBox mEditTrackSy;
