@@ -202,6 +202,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
 
                         if (descNode != null && coordNode != null) {
                             Sample s = new Sample();
+                            s.mLap = l;
+
                             string timeString = parseDesc(s, descNode);
                             parseCoords(s, coordNode);
 
@@ -222,11 +224,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                             prevSample = s;
 
                         }
-                    } // foreach sample
+                    } // foreach node sample
 
                     l.mLapTime = lapTime;
                     startTime += lapTime;
-                }
+                } // for n lap
 
                 TotalTime = startTime;
 
