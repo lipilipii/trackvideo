@@ -89,9 +89,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mEditMovieSy = new System.Windows.Forms.TextBox();
             this.mEditMovieSx = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.radioButton2 = new System.Windows.Forms.RadioButton();
+            this.mRadioRender = new System.Windows.Forms.RadioButton();
             this.mProgressBar = new System.Windows.Forms.ProgressBar();
-            this.radioButton1 = new System.Windows.Forms.RadioButton();
+            this.mRadioPreview = new System.Windows.Forms.RadioButton();
             this.mPreviewPicture = new System.Windows.Forms.PictureBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.mButtonReloadTrack = new System.Windows.Forms.Button();
@@ -373,9 +373,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox2.Controls.Add(this.radioButton2);
+            this.groupBox2.Controls.Add(this.mRadioRender);
             this.groupBox2.Controls.Add(this.mProgressBar);
-            this.groupBox2.Controls.Add(this.radioButton1);
+            this.groupBox2.Controls.Add(this.mRadioPreview);
             this.groupBox2.Controls.Add(this.mButtonGenerate);
             this.groupBox2.Controls.Add(this.mEditDestFilename);
             this.groupBox2.Controls.Add(this.mButtonBrowseDest);
@@ -386,16 +386,16 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Preview && Create Movie";
             // 
-            // radioButton2
+            // mRadioRender
             // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Location = new System.Drawing.Point(9, 43);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(86, 17);
-            this.radioButton2.TabIndex = 9;
-            this.radioButton2.TabStop = true;
-            this.radioButton2.Text = "Also save to:";
-            this.radioButton2.UseVisualStyleBackColor = true;
+            this.mRadioRender.AutoSize = true;
+            this.mRadioRender.Location = new System.Drawing.Point(9, 43);
+            this.mRadioRender.Name = "mRadioRender";
+            this.mRadioRender.Size = new System.Drawing.Size(86, 17);
+            this.mRadioRender.TabIndex = 9;
+            this.mRadioRender.TabStop = true;
+            this.mRadioRender.Text = "Also save to:";
+            this.mRadioRender.UseVisualStyleBackColor = true;
             // 
             // mProgressBar
             // 
@@ -406,16 +406,16 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mProgressBar.Size = new System.Drawing.Size(445, 23);
             this.mProgressBar.TabIndex = 9;
             // 
-            // radioButton1
+            // mRadioPreview
             // 
-            this.radioButton1.AutoSize = true;
-            this.radioButton1.Location = new System.Drawing.Point(9, 19);
-            this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size(85, 17);
-            this.radioButton1.TabIndex = 8;
-            this.radioButton1.TabStop = true;
-            this.radioButton1.Text = "Preview only";
-            this.radioButton1.UseVisualStyleBackColor = true;
+            this.mRadioPreview.AutoSize = true;
+            this.mRadioPreview.Location = new System.Drawing.Point(9, 19);
+            this.mRadioPreview.Name = "mRadioPreview";
+            this.mRadioPreview.Size = new System.Drawing.Size(85, 17);
+            this.mRadioPreview.TabIndex = 8;
+            this.mRadioPreview.TabStop = true;
+            this.mRadioPreview.Text = "Preview only";
+            this.mRadioPreview.UseVisualStyleBackColor = true;
             // 
             // mPreviewPicture
             // 
@@ -595,8 +595,8 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private GroupBox groupBox3;
         private Label mLabelTrackDataLoadResults;
         private Button mButtonReloadTrack;
-        private RadioButton radioButton2;
-        private RadioButton radioButton1;
+        private RadioButton mRadioRender;
+        private RadioButton mRadioPreview;
         private GroupBox groupBox4;
         private Button button2;
         private Button button1;
