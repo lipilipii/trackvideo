@@ -53,12 +53,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         /// </summary>
         private void InitializeComponent() {
             this.mPreviewPicture = new System.Windows.Forms.PictureBox();
-            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
-            this.button1 = new System.Windows.Forms.Button();
+            this.mNumFrame = new System.Windows.Forms.NumericUpDown();
+            this.mButtonStop = new System.Windows.Forms.Button();
             this.mProgressBar = new System.Windows.Forms.ProgressBar();
-            this.button2 = new System.Windows.Forms.Button();
+            this.mButtonPlay = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.mPreviewPicture)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.mNumFrame)).BeginInit();
             this.SuspendLayout();
             // 
             // mPreviewPicture
@@ -73,23 +73,23 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mPreviewPicture.TabIndex = 9;
             this.mPreviewPicture.TabStop = false;
             // 
-            // numericUpDown1
+            // mNumFrame
             // 
-            this.numericUpDown1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.numericUpDown1.Location = new System.Drawing.Point(12, 274);
-            this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(120, 20);
-            this.numericUpDown1.TabIndex = 10;
+            this.mNumFrame.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.mNumFrame.Location = new System.Drawing.Point(12, 274);
+            this.mNumFrame.Name = "mNumFrame";
+            this.mNumFrame.Size = new System.Drawing.Size(120, 20);
+            this.mNumFrame.TabIndex = 10;
             // 
-            // button1
+            // mButtonStop
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(398, 271);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(29, 23);
-            this.button1.TabIndex = 11;
-            this.button1.Text = "[]";
-            this.button1.UseVisualStyleBackColor = true;
+            this.mButtonStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.mButtonStop.Location = new System.Drawing.Point(398, 271);
+            this.mButtonStop.Name = "mButtonStop";
+            this.mButtonStop.Size = new System.Drawing.Size(29, 23);
+            this.mButtonStop.TabIndex = 11;
+            this.mButtonStop.Text = "[]";
+            this.mButtonStop.UseVisualStyleBackColor = true;
             // 
             // mProgressBar
             // 
@@ -100,31 +100,31 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             this.mProgressBar.Size = new System.Drawing.Size(254, 23);
             this.mProgressBar.TabIndex = 12;
             // 
-            // button2
+            // mButtonPlay
             // 
-            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(433, 271);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(29, 23);
-            this.button2.TabIndex = 13;
-            this.button2.Text = "|>";
-            this.button2.UseVisualStyleBackColor = true;
+            this.mButtonPlay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.mButtonPlay.Location = new System.Drawing.Point(433, 271);
+            this.mButtonPlay.Name = "mButtonPlay";
+            this.mButtonPlay.Size = new System.Drawing.Size(29, 23);
+            this.mButtonPlay.TabIndex = 13;
+            this.mButtonPlay.Text = "|>";
+            this.mButtonPlay.UseVisualStyleBackColor = true;
             // 
             // PreviewForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(474, 306);
-            this.Controls.Add(this.button2);
+            this.Controls.Add(this.mButtonPlay);
             this.Controls.Add(this.mProgressBar);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.numericUpDown1);
+            this.Controls.Add(this.mButtonStop);
+            this.Controls.Add(this.mNumFrame);
             this.Controls.Add(this.mPreviewPicture);
             this.Name = "PreviewForm";
             this.Text = "Preview";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.onFormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.mPreviewPicture)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.mNumFrame)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -133,9 +133,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         #endregion
 
         private System.Windows.Forms.PictureBox mPreviewPicture;
-        private System.Windows.Forms.NumericUpDown numericUpDown1;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.NumericUpDown mNumFrame;
+        private System.Windows.Forms.Button mButtonStop;
         private System.Windows.Forms.ProgressBar mProgressBar;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button mButtonPlay;
     }
 }

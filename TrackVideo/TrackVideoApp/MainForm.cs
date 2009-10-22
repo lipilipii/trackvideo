@@ -357,8 +357,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 return;
             }
 
-            String dest = mEditDestFilename.Text;
-            if (File.Exists(dest)) {
+            String dest = null;
+            if (mRadioRender.Checked) {
+                dest = mEditDestFilename.Text;
+            }
+
+            if (dest != null && File.Exists(dest)) {
                 if (MessageBox.Show(
                         mButtonGenerate,
                         String.Format("File {0} already exists. Do you want to overwrite it?", dest),
@@ -368,13 +372,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 }                    
             }
 
-
-            // TODO CONTINUE HERE... move this to a preview/render thread
-            // showPreviewWindow();
-            // return;
-
-            mStatusBar.Text = "Parsing KML...";
-            TrackParser trackData = mTrackData;
+            showPreviewWindow();
 
             mGenerator = new Generator(
                     Convert.ToInt32(mEditFps.Text),
@@ -382,12 +380,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                     Convert.ToInt32(mEditMovieSy.Text),
                     Convert.ToInt32(mEditTrackSx.Text),
                     Convert.ToInt32(mEditTrackSy.Text),
-                    mPreviewPicture.Size,
-                    trackData,
+                    mTrackData,
                     dest);
             mGenerator.mOnUpdateCallback = onUpdateCallback;
             mRequestUserStop = false;
-            mGenerator.Start();
+            mGenerator.StartAsync(); // starts the async thread
 
             updateButtons();
         }
@@ -428,9 +425,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 // This signals the first call of the generator
                 mStatusBar.Text = "Generating video...";
                 mProgressBar.Maximum = maxFrame;
+                mPreviewForm.initProgress(frame, maxFrame);
             } else if (frame == maxFrame) {
                 // This signals the generator is done.
                 mStatusBar.Text = "Done";
+                mPreviewForm.endProgress();
                 stopGenerator();
                 updateButtons();
             } else {
@@ -438,8 +437,7 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             }
 
             mProgressBar.Value = frame;
-
-            if (image != null) mPreviewPicture.Image = image;
+            mPreviewForm.updateProgress(frame, image);
 
             return mRequestUserStop;
         }

@@ -44,6 +44,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
         private void init() {
             CanClose = false;
 
+            mProgressBar.Enabled = false;
+            mButtonPlay.Enabled = false;
+            mButtonStop.Enabled = false;
+            mNumFrame.Enabled = false;
+
             // load all settings
             loadSettings();
         }
@@ -81,5 +86,25 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             }
         }
 
+        internal void initProgress(int frame, int maxFrame) {
+            mProgressBar.Enabled = true;
+            mProgressBar.Value = frame;
+            mProgressBar.Maximum = maxFrame;
+            mNumFrame.Value = frame;
+            mNumFrame.Maximum = maxFrame;
+        }
+
+        internal void endProgress() {
+            mProgressBar.Enabled = false;
+            mButtonPlay.Enabled = false;
+            mButtonStop.Enabled = false;
+            mNumFrame.Enabled = false;
+        }
+
+        internal void updateProgress(int frame, Image image) {
+            mProgressBar.Value = frame;
+            mNumFrame.Value = frame;
+            if (image != null) mPreviewPicture.Image = image;
+        }
     }
 }
