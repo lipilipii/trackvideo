@@ -57,6 +57,7 @@ namespace Alfray.TrackVideo.TrackVideoApp
         public const string kLastMovieSy  = "last-movie-sy";
         public const string kLastTrackSx  = "last-track-sx";
         public const string kLastTrackSy  = "last-track-sy";
+        public const string kWasPreview = "was-preview";
 
 
 	} // class RPrefConstants

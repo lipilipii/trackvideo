@@ -168,6 +168,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             mEditTrackSx.Text = p.getString(PrefConstants.kLastTrackSx,  "500");
             mEditTrackSy.Text = p.getString(PrefConstants.kLastTrackSy,  "200");
 
+            // restore preview or render.
+            // check on "false/render" so that the initial default be true/preview.
+            bool isRender = p[PrefConstants.kWasPreview] == Boolean.FalseString;
+            mRadioPreview.Checked = !isRender;
+            mRadioRender.Checked = !mRadioPreview.Checked;
+
             // <insert other setting stuff here>
         }
 
@@ -188,6 +194,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             p[PrefConstants.kLastMovieSy] = mEditMovieSy.Text;
             p[PrefConstants.kLastTrackSx] = mEditTrackSx.Text;
             p[PrefConstants.kLastTrackSy] = mEditTrackSy.Text;
+
+            // preview or render?
+            p[PrefConstants.kWasPreview] = mRadioPreview.Checked.ToString();
 
             // save settings
             p.Save();
