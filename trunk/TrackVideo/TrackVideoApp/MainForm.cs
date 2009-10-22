@@ -177,6 +177,10 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             // <insert other setting stuff here>
         }
 
+        /// <summary>
+        /// Saves settings when closing the window.
+        /// Called from terminate()
+        /// </summary>
         private void saveSettings() {
 
             Pref p = MainModule.Pref;
@@ -250,6 +254,9 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             }
         }
 
+        /// <summary>
+        /// Shows (and create as needed) the preview window.
+        /// </summary>
         private void showPreviewWindow() {
             if (mPreviewForm == null)
                 createPrefWindow(true);
@@ -257,6 +264,10 @@ namespace Alfray.TrackVideo.TrackVideoApp {
                 mPreviewForm.Visible = true;
         }
 
+        /// <summary>
+        /// Updates the enabled/disabled state of various buttons
+        /// when the app state changes.
+        /// </summary>
         private void updateButtons() {
 
             mButtonReloadTrack.Enabled = File.Exists(mEditTrackFilename.Text);
@@ -287,6 +298,10 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             }
         }
 
+        /// <summary>
+        /// Called when user hits the "Browse" button next to the track field.
+        /// If a file is successfully selected, it will immediately be loaded.
+        /// </summary>
         private void onBrowseTrack() {
             OpenFileDialog fd = new OpenFileDialog();
             fd.InitialDirectory = mEditTrackFilename.Text;
@@ -303,11 +318,20 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             updateButtons();
         }
 
+        /// <summary>
+        /// Reloads the current track when the track filename has changed.
+        /// Parses the KMX/KMZ.
+        /// Called from onBrowseTrack().
+        /// </summary>
         private void onReloadTrack() {
             parseKmxOrKmz(mEditTrackFilename.Text);
             updateButtons();
         }
 
+        /// <summary>
+        /// Called when the user hits the Browser button next to the
+        /// movie destination field.
+        /// </summary>
         private void onBrowseDest() {
             SaveFileDialog fd = new SaveFileDialog();
             fd.InitialDirectory = mEditDestFilename.Text;
@@ -321,6 +345,12 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             updateButtons();
         }
 
+        /// <summary>
+        /// Called when the user hits the Start/Stop button next to the
+        /// preview/render fields. If a preview or generation is going on
+        /// stops it. Otherwise starts one depending on the preview/render
+        /// radio.
+        /// </summary>
         private void onGenerate() {
             if (mGenerator != null) {
                 mRequestUserStop = true;
@@ -362,6 +392,11 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             updateButtons();
         }
 
+        /// <summary>
+        /// Called from either Dispose(), terminate() or the
+        /// end of onUpdateCallback() to stop the current
+        /// generator.
+        /// </summary>
         private void stopGenerator() {
             if (mGenerator != null) {
                 mGenerator.Dispose();
@@ -369,6 +404,25 @@ namespace Alfray.TrackVideo.TrackVideoApp {
             }
         }
 
+        /// <summary>
+        /// Callback called by the generator. It serves 3 purposes depending
+        /// on the "frame" value:
+        /// 
+        /// - frame==0 signals the first call when the generator starts;
+        ///   In this case we want to resize the progress bar depending on the
+        ///   maxFrame value.
+        /// 
+        /// - frame==maxFrame signals the last call of the generator, just before
+        ///   it quits itself. Should reset the UI to indicate the end of the
+        ///   generation.
+        /// 
+        /// - frame in ]0,maxFrame[ means ongoing generation. This is not called
+        ///   for every frame, only about every second (e.g. at the FPS rate).
+        /// 
+        /// The image field *may* be null. It's typically null at first/last call
+        /// and valid in between.
+        /// </summary>
+        /// <returns></returns>
         private bool onUpdateCallback(int frame, int maxFrame, Image image) {
             if (frame == 0) {
                 // This signals the first call of the generator
